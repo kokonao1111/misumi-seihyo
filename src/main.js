@@ -77,6 +77,11 @@ const STAGES = {
     text: oneWord('水と時間', { span: 0.56, dh: 0.4, right: 0.965, cy: 0.46, mh: 0.17, my: 0.27 }),
     layout: () => (isNarrow() ? { x: 0, y: 0.24, scale: fit(0.3) } : { x: 0.34, y: 0.02, scale: 0.56 }),
   },
+  make: {
+    palette: 'day', shape: 'make', cloud: 0,
+    text: null,
+    layout: () => (isNarrow() ? { x: 0, y: 0.2, scale: fit(0.27) } : { x: 0.36, y: -0.02, scale: 0.54 }),
+  },
   cut: {
     palette: 'day', shape: 'column', cloud: 0, refr: 0.2,
     text: oneWord('36貫', { span: 0.52, dh: 0.46, right: 0.965, cy: 0.48, mh: 0.2, my: 0.27 }),
@@ -109,6 +114,45 @@ const STAGES = {
   },
 };
 
+// 「1本の氷柱ができるまで」の段取り。at はスクロールの進み（0〜1）で、その段が始まる位置
+const MAKE_STEPS = [
+  { at: 0.0, word: '注水', when: '7日 5:30', note: 'ろ過した水を缶へ。水温16℃。槽の温度−10.2℃。缶は、−10℃の塩水の槽に沈めてあります。' },
+  { at: 0.14, word: '送気', when: '7日 5:40', note: '缶の底へ管を下ろし、空気を送る。以後、止めない。動いている水は、空気や不純物を抱えたままでは凍れません。' },
+  { at: 0.27, word: '凍る', when: '7日 〜 8日', note: '氷は缶の壁から内側へ、1時間に数ミリずつ育ちます。追い出された空気と不純物が、まだ凍っていない芯に集まって白くにごります。' },
+  { at: 0.5, word: '芯水', when: '8日 14:00', note: '氷の厚み、壁から9cm。中心に残ったにごり水を抜き、新しい水に替える。ここを省くと、白い芯が残ります。' },
+  { at: 0.72, word: '脱缶', when: '9日 5:30', note: '48時間。缶をぬるま湯にくぐらせ、氷柱を抜く。135kg。' },
+  { at: 0.86, word: '検品', when: '9日 6:00', note: '光に透かして、芯とひびを見る。良。貯氷庫で1日寝かせて締めたあと、切り分けます。' },
+];
+const makeText = (i) => oneWord(MAKE_STEPS[i].word, { span: 0.4, dh: 0.4, right: 0.965, cy: 0.48, mh: 0.17, my: 0.25 });
+const ramp = (p, a, b) => clamp((p - a) / (b - a));
+const smooth = (t) => t * t * (3 - 2 * t);
+
+// スクロールの進みから、模型の状態と経過時間を決める
+function makeState(p) {
+  const fill = smooth(ramp(p, 0.01, 0.12));
+  const tubeIn = smooth(ramp(p, 0.14, 0.22));
+  const tubeOut = smooth(ramp(p, 0.64, 0.7));
+  const freeze = ramp(p, 0.27, 0.68);
+  const swap = ramp(p, 0.5, 0.56);                    // 芯水の入れ替え：にごりがいったん消える
+  const milkBefore = smooth(ramp(p, 0.3, 0.48)) * 0.85;
+  const milkAfter = smooth(ramp(p, 0.56, 0.64)) * 0.45 * (1 - smooth(ramp(p, 0.64, 0.69)));
+  return {
+    state: {
+      fill,
+      tube: tubeIn * (1 - tubeOut),
+      air: smooth(ramp(p, 0.2, 0.26)) * (1 - tubeOut),
+      freeze: smooth(freeze),
+      core: 1 - freeze * 0.97,
+      milk: p < 0.5 ? milkBefore : lerpN(milkBefore, 0, smooth(swap)) + milkAfter,
+      drop: smooth(ramp(p, 0.73, 0.85)),
+      finish: smooth(ramp(p, 0.76, 0.88)),
+    },
+    hours: Math.round(48 * ramp(p, 0.14, 0.7)),
+    turn: smooth(ramp(p, 0.86, 0.99)) * Math.PI,     // 検品：半回転。氷柱は前後対称なので、次の場面へそのままつながる
+  };
+}
+const lerpN = (a, b, t) => a + (b - a) * t;
+
 const NOTES = [
   [12, '家庭の冷凍庫の氷。外側から一気に凍り、空気と不純物が中心に閉じ込められて白く濁ります。'],
   [30, '製氷機の氷。見た目は透けてきますが、芯にはまだ細かい気泡が残っています。溶けるのも早い。'],
@@ -123,7 +167,7 @@ async function initStage() {
 
   // 背景の文字に使う字（日本語フォントは字ごとに分割配信される）と、3Dの部品を同時に読み込む。
   // 3Dの部品は大きいので、本文の表示は待たせない
-  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年水時間36';
+  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年水時間36注送気凍芯脱缶検品';
   const fontsLoaded = document.fonts.load(font(64), glyphs);
   const [{ IceStage }] = await Promise.all([
     import('./ice/stage.js'),
@@ -140,6 +184,17 @@ async function initStage() {
   const barEl = document.getElementById('hoursBar');
   const noteEl = document.getElementById('clarityNote');
   const cutEl = document.getElementById('cutCount');
+  const makeEls = { hours: document.getElementById('makeHours'), when: document.getElementById('makeWhen'), note: document.getElementById('makeNote'), steps: [...document.querySelectorAll('[data-make-step]')] };
+  let makeIndex = -1;
+  function setMakeStep(i, instant) {
+    if (i === makeIndex) return;
+    makeIndex = i;
+    stage.setText(makeText(i), { fade: !(instant || reduced) });
+    if (makeEls.when) makeEls.when.textContent = MAKE_STEPS[i].when;
+    if (makeEls.note) makeEls.note.textContent = MAKE_STEPS[i].note;
+    makeEls.steps.forEach((el, k) => { el.classList.toggle('is-now', k === i); el.classList.toggle('is-done', k < i); });
+  }
+  const makeStepAt = (p) => MAKE_STEPS.reduce((acc, st, k) => (p >= st.at ? k : acc), 0);
   const tabs = [...document.querySelectorAll('[data-product]')];
   const panels = [...document.querySelectorAll('[data-panel]')];
   let active = null;
@@ -172,6 +227,15 @@ async function initStage() {
     if (s.name === 'products') {
       productIndex = -1;
       setProduct(Math.min(3, Math.floor(p * 4)), !animate);
+    } else if (s.name === 'make') {
+      makeIndex = -1;
+      stage.setMake(makeState(p).state);
+      // 切り分けの場面から戻ってきたときは、同じ大きさの氷柱どうしなので、その場で入れ替える
+      stage.setShape('make', { instant: !animate || prev?.name === 'cut' });
+      setMakeStep(makeStepAt(p), !animate);
+    } else if (s.name === 'cut' && prev?.name === 'make') {
+      stage.setShape('column', { instant: true });
+      stage.setText(c.text, { fade: animate });
     } else {
       // 最初の1回だけは、氷が回りながら現れる
       stage.setShape(c.shape, { instant: !animate && (shownOnce || reduced) });
@@ -211,6 +275,12 @@ async function initStage() {
     } else if (best.name === 'products') {
       setProduct(Math.min(3, Math.floor(p * 4)));
       stage.scrollTurn = 0;
+    } else if (best.name === 'make') {
+      const m = makeState(p);
+      stage.setMake(m.state);
+      stage.scrollTurn = m.turn;
+      setMakeStep(makeStepAt(p));
+      if (makeEls.hours) makeEls.hours.textContent = String(m.hours);
     } else if (best.name === 'cut') {
       // スクロールに合わせて、1本の氷柱に切れ目が入り、36個に分かれていく
       const t = clamp((p - 0.12) / 0.62);
@@ -230,6 +300,12 @@ async function initStage() {
     const el = sections.find((s) => s.name === 'products').el;
     const top = el.getBoundingClientRect().top + scrollY;
     scrollToY(top + ((i + 0.5) / 4) * (el.offsetHeight - innerHeight));
+  }));
+
+  makeEls.steps.forEach((el, i) => el.addEventListener('click', () => {
+    const sec = sections.find((x) => x.name === 'make').el;
+    const top = sec.getBoundingClientRect().top + scrollY;
+    scrollToY(top + (MAKE_STEPS[i].at + 0.03) * (sec.offsetHeight - innerHeight));
   }));
 
   document.querySelectorAll('[data-grab]').forEach((z) => z.addEventListener('pointerdown', (e) => stage.grab(e)));
@@ -270,12 +346,25 @@ function initReveal() {
 function initHead() {
   const head = document.getElementById('head');
   let last = scrollY;
+  const paint = () => {
+    // ヘッダーの真下にあるものを見て、見た目を決める。氷の舞台の上では透かし（文字は地と反転）、
+    // 紙面の上では地色を敷いて、うしろの見出しと重ならないようにする
+    head.style.pointerEvents = 'none';
+    const under = document.elementFromPoint(innerWidth / 2, head.offsetHeight + 2);
+    head.style.pointerEvents = '';
+    const onStage = !under || !!under.closest('.stage') || scrollY < 40;
+    const dark = !!under?.closest('.night, .next--night, .foot');
+    head.classList.toggle('is-solid', !onStage);
+    head.classList.toggle('is-dark', !onStage && dark);
+  };
   addEventListener('scroll', () => {
     const y = scrollY;
     if (Math.abs(y - last) < 6) return;
     head.classList.toggle('is-away', y > last && y > 200 && !document.getElementById('nav').classList.contains('is-open'));
     last = y;
+    paint();
   }, { passive: true });
+  paint();
 }
 
 /* ---------- メニュー ---------- */

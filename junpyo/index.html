@@ -50,6 +50,30 @@
       </div>
     </section>
 
+    <!-- つくり方：缶の中で氷が育つのを見る -->
+    <section class="stage stage--make" id="tsukurikata" data-stage="make">
+      <div class="stage__pin">
+        <div class="make__head">
+          <h2 class="label">つくり方</h2>
+          <p class="make__title">1本の氷柱が<br>できるまで。</p>
+        </div>
+        <ol class="make__steps" aria-label="工程">
+          <li><button type="button" data-make-step>注水</button></li>
+          <li><button type="button" data-make-step>送気</button></li>
+          <li><button type="button" data-make-step>凍る</button></li>
+          <li><button type="button" data-make-step>芯水の入れ替え</button></li>
+          <li><button type="button" data-make-step>脱缶</button></li>
+          <li><button type="button" data-make-step>検品</button></li>
+        </ol>
+        <div class="make__now">
+          <p class="make__when" id="makeWhen">7日 5:30</p>
+          <p class="make__hours"><span id="makeHours">0</span><small>時間</small></p>
+          <p class="make__note" id="makeNote">ろ過した水を缶へ。水温16℃。槽の温度−10.2℃。</p>
+        </div>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
     <!-- 切り分ける -->
     <section class="stage stage--chapter stage--cut" data-stage="cut">
       <div class="stage__pin">
@@ -64,10 +88,10 @@
     </section>
 
     <!-- 製氷日誌 -->
-    <section class="sheet factory" id="tsukurikata">
+    <section class="sheet factory">
       <div class="factory__head">
-        <h2 class="reveal">1本の氷柱が<br>できるまで。</h2>
-        <p class="reveal">工場では、缶ごとに日誌をつけています。下は、ある1本の記録です。書いてあることは、92年前とほとんど変わりません。</p>
+        <h2 class="reveal">工場では、<br>こう書き残します。</h2>
+        <p class="reveal">缶ごとに日誌をつけています。下は、ある1本の記録です。書いてあることは、92年前とほとんど変わりません。</p>
       </div>
 
       <div class="log reveal" role="region" aria-label="製氷日誌" tabindex="0">

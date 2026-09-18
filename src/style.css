@@ -91,6 +91,9 @@ html:not(.has-ice) .stage--night { background: var(--ink); }
   transition: transform 0.7s var(--ease);
 }
 .head.is-away { transform: translateY(-110%); }
+/* 紙面の上では地色を敷く（うしろの見出しと重ならないように） */
+.head.is-solid { mix-blend-mode: normal; color: var(--ink); background: rgb(233 239 241 / 0.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--frost); }
+.head.is-solid.is-dark { color: var(--white); background: rgb(12 26 34 / 0.88); box-shadow: 0 1px 0 #22353f; }
 .head > * { pointer-events: auto; }
 .head__name { font-family: var(--mincho); font-weight: 900; font-size: 1.375rem; letter-spacing: 0.12em; }
 .head__nav { display: flex; gap: clamp(1rem, 2vw, 2rem); align-items: center; font-size: 0.875rem; font-weight: 500; }
@@ -516,6 +519,36 @@ html:not(.has-ice) .stage--title .stage__pin { display: grid; align-content: cen
 html:not(.has-ice) .title__copy { font-size: clamp(3.5rem, 15vw, 14rem); line-height: 1.15; }
 html:not(.has-ice) .stage--title .stage__still { position: absolute; right: 8%; top: 50%; translate: 0 -50%; width: min(36vw, 56vh); }
 @media (max-width: 899px) { html:not(.has-ice) .stage--title .stage__still { position: static; translate: none; width: 70%; margin: 1rem auto 0; } }
+
+/* ---------- つくり方の場面 ---------- */
+.stage--make { height: 640vh; }
+.make__head { position: absolute; left: var(--side); top: calc(var(--head-h) + 2rem); }
+.make__title { margin-top: 1.5rem; font-family: var(--mincho); font-weight: 900; font-size: clamp(1.5rem, 2.7vw, 2.5rem); line-height: 1.5; letter-spacing: 0.04em; }
+.make__steps { position: absolute; left: var(--side); top: calc(var(--head-h) + 13.5rem); margin: 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; }
+.make__steps button { position: relative; font-family: var(--mincho); font-weight: 700; font-size: 1.0625rem; line-height: 1.9; color: var(--shade); opacity: 0.6; padding-left: 0; transition: color 0.6s var(--ease), opacity 0.6s var(--ease), padding 0.6s var(--ease); }
+.make__steps button::before { content: ""; position: absolute; left: 0; top: 50%; width: 1.25rem; height: 1px; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease); }
+.make__steps button.is-done { opacity: 0.9; }
+.make__steps button.is-now { color: var(--ink); opacity: 1; padding-left: 1.9rem; font-weight: 900; }
+.make__steps button.is-now::before { transform: scaleX(1); }
+.make__steps button:hover { opacity: 1; }
+.make__now { position: absolute; left: var(--side); bottom: clamp(2rem, 6vh, 4.5rem); width: min(26rem, 32vw); }
+.make__when { font-family: var(--mincho); font-weight: 700; font-size: 0.9375rem; color: var(--shade); }
+.make__hours { font-family: var(--mincho); font-weight: 900; line-height: 1.1; font-size: clamp(3.5rem, 8vw, 7rem); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.make__hours small { font-size: 0.22em; margin-left: 0.5rem; color: inherit; font-weight: 700; letter-spacing: 0.1em; }
+.make__note { margin-top: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--ink); font-size: 0.875rem; line-height: 1.9; min-height: 7.6em; }
+.stage--make .stage__grab { left: 50%; top: 12%; width: 36%; height: 76%; }
+@media (max-width: 899px) {
+  .make__head { top: calc(var(--head-h) + 0.5rem); }
+  .make__title { margin-top: 0.5rem; font-size: 1.25rem; }
+  .make__title br { display: none; }
+  .make__steps { display: none; }
+  .make__now { width: auto; right: var(--side); bottom: 1.25rem; }
+  .make__hours { font-size: 3rem; }
+  .make__note { margin-top: 0.4rem; padding-top: 0.6rem; font-size: 0.8125rem; line-height: 1.8; min-height: 7.4em; }
+  .stage--make .stage__grab { left: 15%; top: 26%; width: 70%; height: 36%; }
+}
+/* 3Dが使えない端末では、この場面は出さず、下の日誌で伝える */
+html:not(.has-ice) .stage--make { display: none; }
 
 /* ---------- トップの章（氷の上に文章を重ねる） ---------- */
 .stage--chapter { height: 190vh; }

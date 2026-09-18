@@ -5,6 +5,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry.js';
 import gsap from 'gsap';
+import { buildMakeRig } from './make.js';
 import { backdropVert, backdropFrag, fogFrag, iceVert, iceFrag, backVert, backFrag } from './shaders.js';
 
 const EASE = 'expo.out';
@@ -103,7 +104,7 @@ export class IceStage {
     this.backMaterial = new ShaderMaterial({ vertexShader: backVert, fragmentShader: backFrag, side: BackSide });
     this.iceUniforms = {
       ...this.shared,
-      uRefr: { value: 0.24 }, uBump: { value: 0.05 }, uBumpFreq: { value: 2.2 },
+      uRefr: { value: 0.24 }, uBump: { value: 0.05 }, uBumpFreq: { value: 2.2 }, uFlow: { value: 0 },
       uSaw: { value: 0 }, uFrost: { value: 0 }, uCrack: { value: 0 }, uDrops: { value: 0 },
       uCloud: { value: 0 }, uHalf: { value: new Vector3(1, 1, 1) },
       uTint: { value: c(p.tint) }, uEnvHigh: { value: c(p.envHigh) }, uEnvLow: { value: c(p.envLow) },
@@ -219,6 +220,11 @@ export class IceStage {
     crushed.userData = { half: new Vector3(0.6, 0.45, 0.5), bump: 0.06, tilt: [0.2, 0.2, 0], saw: 0, frost: 0, crack: 1, drops: 0.4 };
     shapes.crushed = crushed;
 
+    // 「1本の氷柱ができるまで」の模型（缶、水、芯、管、泡）
+    this.makeRig = buildMakeRig(this);
+    this.makeRig.group.userData = { half: new Vector3(0.63, 1.18, 0.29), bump: 0.05, tilt: [0.22, -0.66, 0], saw: 0, frost: 0, crack: 0, drops: 0 };
+    shapes.make = this.makeRig.group;
+
     for (const g of Object.values(shapes)) { g.visible = false; g.scale.setScalar(0.001); this.spin.add(g); }
     return shapes;
   }
@@ -305,6 +311,9 @@ export class IceStage {
       piece.rotation.set(0, e * 0.22 * ((cy % 2) ? 1 : -1) * (cx > 0 ? 1 : -1), 0);
     }
   }
+  // 製氷の場面の進み具合（水位、管、泡、凍り具合、芯、脱缶など）
+  setMake(state) { this.makeRig.setState(state); }
+
   setRefraction(v) { this.iceUniforms.uRefr.value = v; }
 
   // 氷の置き場所。x,y は画面の中心からの割合（-1〜1）、scale は画面の高さに対する大きさ
@@ -416,11 +425,14 @@ export class IceStage {
     );
 
     if (!this.still) this.shared.uTime.value += dt;   // 水滴と冷気を動かす
+    if (this.current === 'make') this.makeRig.update(this.still ? 0 : dt);
     this.#watchSpeed(now);
 
     // 1回目：裏面の法線と奥行き　2回目：本番
     this.quad.visible = false;
     this.fog.visible = false;
+    const hidden = this.makeRig.extras.filter((m) => m.visible);
+    hidden.forEach((m) => { m.visible = false; });
     this.scene.overrideMaterial = this.backMaterial;
     this.renderer.setRenderTarget(this.backTarget);
     this.renderer.setClearColor(0x8080ff, 0);
@@ -428,6 +440,7 @@ export class IceStage {
     this.renderer.render(this.scene, this.camera);
     this.renderer.setRenderTarget(null);
     this.scene.overrideMaterial = null;
+    hidden.forEach((m) => { m.visible = true; });
     this.quad.visible = true;
     this.fog.visible = this.fogEnabled;
     this.renderer.render(this.scene, this.camera);

@@ -149,6 +149,7 @@ export const iceFrag = /* glsl */ `
   uniform float uRefr;      // 屈折の強さ
   uniform float uBump;      // 表面のうねり
   uniform float uBumpFreq;
+  uniform float uFlow;      // 0=固まった氷　1=動いている水（表面のうねりが流れる）
   uniform float uSaw;       // 切り口ののこぎり目
   uniform float uFrost;     // 角の霜
   uniform float uCrack;     // 内部のひび
@@ -222,7 +223,7 @@ export const iceFrag = /* glsl */ `
     faceFrame(nO, vObj, fuv, T, B, flatness);
     float onFace = smoothstep(0.93, 0.995, flatness);
 
-    vec3 q = vObj * uBumpFreq + uSeed;
+    vec3 q = vObj * uBumpFreq + uSeed + vec3(0.0, -uTime * 0.5, uTime * 0.2) * uFlow;
     vec3 g = vec3(noise(q), noise(q + 19.7), noise(q + 41.3)) - 0.5;
     float bump = uBump + uCloud * 0.35;
     vec3 n = nO + g * bump;
