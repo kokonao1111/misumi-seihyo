@@ -84,7 +84,7 @@ const STAGES = {
   night: {
     palette: 'night', shape: 'ball', cloud: 0, refr: 0.5,
     text: twoLines('薄め', 'ない。'),
-    layout: () => (isNarrow() ? { x: 0, y: -0.01, scale: fit(0.27) } : { x: 0.14, y: -0.14, scale: 0.56 }),
+    layout: () => (isNarrow() ? { x: 0, y: -0.17, scale: fit(0.27) } : { x: 0.14, y: -0.14, scale: 0.56 }),
   },
 };
 
@@ -110,6 +110,7 @@ async function initStage() {
   let stage;
   try { stage = new IceStage(document.getElementById('ice'), { lowPower }); } catch { root.classList.remove('has-ice'); return; }
   stage.still = reduced;
+  stage.lockQuality = new URLSearchParams(location.search).has('hq');   // 画面確認用：自動の画質調整を止める
   stage.resize();
 
   const sections = [...document.querySelectorAll('[data-stage]')].map((el) => ({ el, name: el.dataset.stage, cfg: STAGES[el.dataset.stage] }));

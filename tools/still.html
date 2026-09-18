@@ -27,6 +27,7 @@ s.setText((ctx, w, h) => {
 s.setShape(q.get('s') || 'block', { instant: true });
 s.setCloud(+(q.get('c') || 0));
 s.setLayout({ x: 0, y: 0, scale: +(q.get('k') || 0.8) });
+s.lockQuality = true;
 s.still = true; s.autoSpin = +(q.get('r') || 0);
 s.renderOnce(); s.renderOnce();
 window.__ready = true;

@@ -15,7 +15,7 @@ for (const y of ys) {
     const top = m ? document.querySelector(m[1]).getBoundingClientRect().top + scrollY + (+m[2] || 0) : +yy;
     window.scrollTo(0, top);
   }, y);
-  await page.waitForTimeout(1400);
+  await page.waitForTimeout(+(process.env.WAIT || 1400));
   await page.screenshot({ path: out.replace('.png', `-${String(y).replace(/[#+]/g, '')}.png`) });
 }
 await browser.close();

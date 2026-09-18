@@ -2,8 +2,10 @@ import {
   BackSide, CanvasTexture, Color, Group, IcosahedronGeometry, LinearFilter, MathUtils, Mesh, NoColorSpace, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial, SphereGeometry, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry.js';
 import gsap from 'gsap';
-import { backdropVert, backdropFrag, iceVert, iceFrag, backVert, backFrag } from './shaders.js';
+import { backdropVert, backdropFrag, fogFrag, iceVert, iceFrag, backVert, backFrag } from './shaders.js';
 
 const EASE = 'expo.out';
 
@@ -12,10 +14,12 @@ const PALETTE = {
   day: {
     bg: '#e9eff1', bgEdge: '#d3dfe4', ink: '#0c1a22', tint: '#a9d3e2',
     envHigh: '#ffffff', envLow: '#3b5563', light: '#ffffff', rim: '#ffffff',
+    caustic: '#1c1f20', fogColor: '#ffffff', shadow: 0.2, fog: 0.5,
   },
   night: {
     bg: '#0c1a22', bgEdge: '#050b0f', ink: '#3a6076', tint: '#9cc9da',
     envHigh: '#1b3644', envLow: '#02060a', light: '#c98a45', rim: '#e08a2c',
+    caustic: '#8a5420', fogColor: '#8fb4c4', shadow: 0.35, fog: 0.4,
   },
 };
 
@@ -25,20 +29,49 @@ function rng(seed) {
   return () => ((s = (s * 16807) % 2147483647) / 2147483647);
 }
 
-// かち割り用のごろっとした塊
-function chunkGeometry(seed, radius) {
-  const r = rng(seed);
-  const g = new IcosahedronGeometry(radius, 1);
+// なめらかな乱れ（位置が同じなら同じ値になるので、頂点を動かしても継ぎ目が開かない）
+function valueNoise(x, y, z) {
+  const h = (i, j, k) => { const n = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453; return n - Math.floor(n); };
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const f = (t) => t * t * (3 - 2 * t);
+  const u = f(x - xi), v = f(y - yi), w = f(z - zi);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  return lerp(
+    lerp(lerp(h(xi, yi, zi), h(xi + 1, yi, zi), u), lerp(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v),
+    lerp(lerp(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), lerp(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v),
+    w,
+  ) - 0.5;
+}
+
+// 機械で作ったような完全な形をくずす。溶けて少しいびつになった面と、ふぞろいな角を作る
+function roughen(geometry, amp, freq, seed, { flat = false } = {}) {
+  let g = geometry;
+  g.deleteAttribute('uv');
+  g.deleteAttribute('normal');
+  g = mergeVertices(g, 1e-4);
   const pos = g.attributes.position;
-  const moved = new Map();
   for (let i = 0; i < pos.count; i++) {
-    const key = `${pos.getX(i).toFixed(3)},${pos.getY(i).toFixed(3)},${pos.getZ(i).toFixed(3)}`;
-    if (!moved.has(key)) moved.set(key, 0.74 + r() * 0.42);
-    const k = moved.get(key);
-    pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * k * 0.85, pos.getZ(i) * k);
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const len = Math.hypot(x, y, z) || 1;
+    const d = (valueNoise(x * freq + seed, y * freq, z * freq) + 0.5 * valueNoise(x * freq * 2.3, y * freq * 2.3 + seed, z * freq * 2.3)) * amp;
+    pos.setXYZ(i, x + (x / len) * d, y + (y / len) * d, z + (z / len) * d);
   }
+  if (flat) g = g.toNonIndexed();   // かち割りは割れ口が平らな面になる
   g.computeVertexNormals();
   return g;
+}
+
+// かち割り用の塊：ばらまいた点を包む多面体。割れ口が大きな平面になり、角がふぞろいに立つ
+function chunkGeometry(seed, radius) {
+  const r = rng(seed);
+  const pts = [];
+  const sx = 0.8 + r() * 0.5, sy = 0.6 + r() * 0.35, sz = 0.7 + r() * 0.45;
+  for (let i = 0; i < 11; i++) {
+    const u = r() * 2 - 1, t = r() * Math.PI * 2, k = Math.sqrt(1 - u * u);
+    const d = radius * (0.72 + r() * 0.38);
+    pts.push(new Vector3(k * Math.cos(t) * d * sx, u * d * sy, k * Math.sin(t) * d * sz));
+  }
+  return new ConvexGeometry(pts);
 }
 
 export class IceStage {
@@ -58,18 +91,21 @@ export class IceStage {
 
     const c = (hex) => new Color(hex);
     const p = PALETTE.day;
+    this.backTarget = new WebGLRenderTarget(2, 2, { minFilter: LinearFilter, magFilter: LinearFilter });
     this.shared = {
       uText: { value: this.texA }, uTextB: { value: this.texB }, uTextMix: { value: 0 },
+      uBack: { value: this.backTarget.texture },
       uBg: { value: c(p.bg) }, uBgEdge: { value: c(p.bgEdge) }, uInk: { value: c(p.ink) },
       uRes: { value: new Vector2(1, 1) },
+      uShadow: { value: p.shadow }, uCaustic: { value: c(p.caustic) },
+      uTime: { value: 0 }, uFog: { value: p.fog }, uFogColor: { value: c(p.fogColor) },
     };
-    this.backTarget = new WebGLRenderTarget(2, 2, { minFilter: LinearFilter, magFilter: LinearFilter });
     this.backMaterial = new ShaderMaterial({ vertexShader: backVert, fragmentShader: backFrag, side: BackSide });
     this.iceUniforms = {
       ...this.shared,
-      uBack: { value: this.backTarget.texture },
       uRefr: { value: 0.24 }, uBump: { value: 0.05 }, uBumpFreq: { value: 2.2 },
-      uCloud: { value: 0 }, uCamObj: { value: new Vector3() }, uHalf: { value: new Vector3(1, 1, 1) },
+      uSaw: { value: 0 }, uFrost: { value: 0 }, uCrack: { value: 0 }, uDrops: { value: 0 },
+      uCloud: { value: 0 }, uHalf: { value: new Vector3(1, 1, 1) },
       uTint: { value: c(p.tint) }, uEnvHigh: { value: c(p.envHigh) }, uEnvLow: { value: c(p.envLow) },
       uLight: { value: c(p.light) }, uRim: { value: c(p.rim) }, uSeed: { value: 3.7 },
       uCenter: { value: new Vector2(0.5, 0.5) }, uLens: { value: 0 },
@@ -85,6 +121,16 @@ export class IceStage {
     this.scene.add(quad);
 
     this.iceMaterial = new ShaderMaterial({ uniforms: this.iceUniforms, vertexShader: iceVert, fragmentShader: iceFrag });
+
+    // 冷気：氷より手前に重ねる薄い霧。性能の低い端末では出さない
+    this.fog = new Mesh(
+      new PlaneGeometry(2, 2),
+      new ShaderMaterial({ uniforms: this.shared, vertexShader: backdropVert, fragmentShader: fogFrag, depthTest: false, depthWrite: false, transparent: true }),
+    );
+    this.fog.frustumCulled = false;
+    this.fog.renderOrder = 10;
+    this.fogEnabled = !lowPower;
+    this.scene.add(this.fog);
 
     // 氷を載せる台。pivot=置き場所、spin=自転とポインタへの傾き
     this.pivot = new Group();
@@ -118,14 +164,14 @@ export class IceStage {
 
     // 貫目氷（氷柱から切り出した直方体）
     const block = new Group();
-    block.add(new Mesh(new RoundedBoxGeometry(1.5, 2.3, 1.05, 6, 0.1), m));
-    block.userData = { half: new Vector3(0.75, 1.15, 0.525), bump: 0.075, tilt: [0.16, -0.62, 0.04] };
+    block.add(new Mesh(roughen(new RoundedBoxGeometry(1.5, 2.3, 1.05, 8, 0.1), 0.012, 1.1, 1.7), m));
+    block.userData = { half: new Vector3(0.75, 1.15, 0.525), bump: 0.075, tilt: [0.16, -0.42, 0.04], saw: 1, frost: 1, crack: 1, drops: 1 };
     shapes.block = block;
 
     // 製品としての貫目氷（28 × 13 × 12cm を立てた比率）
     const kanme = new Group();
-    kanme.add(new Mesh(new RoundedBoxGeometry(1.06, 2.3, 0.98, 6, 0.06), m));
-    kanme.userData = { half: new Vector3(0.53, 1.15, 0.49), bump: 0.06, tilt: [0.2, -0.6, 0.03] };
+    kanme.add(new Mesh(roughen(new RoundedBoxGeometry(1.06, 2.3, 0.98, 8, 0.06), 0.01, 1.3, 4.2), m));
+    kanme.userData = { half: new Vector3(0.53, 1.15, 0.49), bump: 0.06, tilt: [0.2, -0.6, 0.03], saw: 1, frost: 1, crack: 0.9, drops: 0.8 };
     shapes.kanme = kanme;
 
     // 氷柱1本の切り分け図：横2 × 奥2 × 縦9 = 36貫（静止画の書き出し用）
@@ -136,25 +182,25 @@ export class IceStage {
       piece.position.set((x - 0.5) * 0.6, (y - 4) * 0.262, (z - 0.5) * 0.3);
       column.add(piece);
     }
-    column.userData = { half: new Vector3(1, 1, 1), bump: 0.03, tilt: [0.22, -0.66, 0] };
+    column.userData = { half: new Vector3(0.28, 0.117, 0.13), bump: 0.03, tilt: [0.22, -0.66, 0], saw: 0.6, frost: 0.8, crack: 0, drops: 0 };
     shapes.column = column;
 
     // 角氷：3つをずらして積む
     const cubes = new Group();
-    const cg = new RoundedBoxGeometry(1, 1, 1, 4, 0.05);
+    const cg = roughen(new RoundedBoxGeometry(1, 1, 1, 6, 0.045), 0.008, 1.6, 8.8);
     [[-0.34, -0.62, 0.05, 0.2], [0.5, -0.6, -0.3, -0.5], [0.06, 0.4, -0.08, 0.75]].forEach(([x, y, z, ry]) => {
       const c = new Mesh(cg, m);
       c.position.set(x, y, z);
       c.rotation.y = ry;
       cubes.add(c);
     });
-    cubes.userData = { half: new Vector3(1, 1, 1), bump: 0.04, tilt: [0.28, 0.3, 0] };
+    cubes.userData = { half: new Vector3(0.5, 0.5, 0.5), bump: 0.04, tilt: [0.28, 0.3, 0], saw: 0.8, frost: 1, crack: 0.8, drops: 0.7 };
     shapes.cubes = cubes;
 
     // 丸氷
     const ball = new Group();
-    ball.add(new Mesh(new SphereGeometry(1.08, this.lowPower ? 48 : 96, this.lowPower ? 32 : 64), m));
-    ball.userData = { half: new Vector3(1, 1, 1), bump: 0.035, tilt: [0.1, 0, 0], lens: 1.35 };
+    ball.add(new Mesh(roughen(new SphereGeometry(1.08, this.lowPower ? 48 : 96, this.lowPower ? 32 : 64), 0.012, 1.6, 2.2), m));
+    ball.userData = { half: new Vector3(1.08, 1.08, 1.08), bump: 0.035, tilt: [0.1, 0, 0], lens: 1.35, saw: 0, frost: 0, crack: 0.7, drops: 0.9 };
     shapes.ball = ball;
 
     // かち割り
@@ -162,12 +208,12 @@ export class IceStage {
     const r = rng(77);
     const spots = [[-0.75, -0.55, 0], [0.1, -0.7, 0.35], [0.85, -0.5, -0.1], [-0.35, 0.15, -0.3], [0.5, 0.2, 0.2], [0.05, 0.85, 0], [-0.95, 0.35, 0.3], [1.0, 0.7, -0.35]];
     spots.forEach(([x, y, z], i) => {
-      const c = new Mesh(chunkGeometry(100 + i * 13, 0.42 + r() * 0.16), m);
-      c.position.set(x, y, z);
+      const c = new Mesh(chunkGeometry(100 + i * 13, 0.62 + r() * 0.2), m);
+      c.position.set(x * 0.92, y * 0.92, z);
       c.rotation.set(r() * 6, r() * 6, r() * 6);
       crushed.add(c);
     });
-    crushed.userData = { half: new Vector3(1, 1, 1), bump: 0.02, tilt: [0.2, 0.2, 0] };
+    crushed.userData = { half: new Vector3(0.6, 0.45, 0.5), bump: 0.06, tilt: [0.2, 0.2, 0], saw: 0, frost: 0, crack: 1, drops: 0.4 };
     shapes.crushed = crushed;
 
     for (const g of Object.values(shapes)) { g.visible = false; g.scale.setScalar(0.001); this.spin.add(g); }
@@ -194,7 +240,9 @@ export class IceStage {
   setPalette(name, duration = 0.8) {
     const p = PALETTE[name];
     const u = this.iceUniforms;
-    const pairs = [[u.uBg, p.bg], [u.uBgEdge, p.bgEdge], [u.uInk, p.ink], [u.uTint, p.tint], [u.uEnvHigh, p.envHigh], [u.uEnvLow, p.envLow], [u.uLight, p.light], [u.uRim, p.rim]];
+    const pairs = [[u.uBg, p.bg], [u.uBgEdge, p.bgEdge], [u.uInk, p.ink], [u.uTint, p.tint], [u.uEnvHigh, p.envHigh], [u.uEnvLow, p.envLow], [u.uLight, p.light], [u.uRim, p.rim], [u.uCaustic, p.caustic], [u.uFogColor, p.fogColor]];
+    u.uShadow.value = p.shadow;
+    u.uFog.value = p.fog;
     for (const [uni, hex] of pairs) {
       const t = new Color(hex);
       if (duration === 0) uni.value.copy(t);
@@ -213,6 +261,10 @@ export class IceStage {
     this.iceUniforms.uHalf.value.copy(ud.half);
     this.iceUniforms.uBump.value = ud.bump;
     this.iceUniforms.uLens.value = ud.lens || 0;
+    this.iceUniforms.uSaw.value = ud.saw || 0;
+    this.iceUniforms.uFrost.value = ud.frost || 0;
+    this.iceUniforms.uCrack.value = this.noCracks ? 0 : (ud.crack || 0);
+    this.iceUniforms.uDrops.value = ud.drops || 0;
     this.baseTilt = ud.tilt;
     if (instant) {
       if (prev) { gsap.killTweensOf(prev.scale); prev.visible = false; prev.scale.setScalar(0.001); }
@@ -292,10 +344,27 @@ export class IceStage {
     }
   }
 
-  start() { if (!this.running) { this.running = true; this.lastTime = performance.now(); this.renderer.setAnimationLoop(() => this.#frame()); } }
+  start() { if (!this.running) { this.running = true; this.speedSince = 0; this.lastTime = performance.now(); this.renderer.setAnimationLoop(() => this.#frame()); } }
   stop() { this.running = false; this.renderer.setAnimationLoop(null); }
 
   renderOnce() { this.#frame(0); }
+
+  // 描画が追いつかない端末では、段階的に軽くする（1: 冷気を止める　2: 解像度を下げる　3: ひびを止める）
+  #watchSpeed(now) {
+    if (!this.running || this.lockQuality || this.qualityStep >= 3) return;
+    this.frames = (this.frames || 0) + 1;
+    if (!this.speedSince) { this.speedSince = now; this.frames = 0; return; }
+    const span = now - this.speedSince;
+    if (span < 1500) return;
+    const fps = (this.frames / span) * 1000;
+    this.speedSince = now; this.frames = 0;
+    if (fps > 40) return;
+    this.qualityStep = (this.qualityStep || 0) + 1;
+    if (this.qualityStep === 1) this.fogEnabled = false;
+    if (this.qualityStep === 2) { this.maxDpr = Math.max(1, this.maxDpr * 0.7); this.resize(); }
+    if (this.qualityStep === 3) this.noCracks = true;
+    if (this.noCracks) this.iceUniforms.uCrack.value = 0;
+  }
 
   #frame(forceDt) {
     const now = performance.now();
@@ -318,15 +387,12 @@ export class IceStage {
       t[2],
     );
 
-    const shape = this.current && this.shapes[this.current];
-    if (shape && this.iceUniforms.uCloud.value > 0.002) {
-      const mesh = shape.children[0];
-      mesh.updateWorldMatrix(true, false);
-      this.iceUniforms.uCamObj.value.copy(this.camera.position);
-      mesh.worldToLocal(this.iceUniforms.uCamObj.value);
-    }
+    if (!this.still) this.shared.uTime.value += dt;   // 水滴と冷気を動かす
+    this.#watchSpeed(now);
+
     // 1回目：裏面の法線と奥行き　2回目：本番
     this.quad.visible = false;
+    this.fog.visible = false;
     this.scene.overrideMaterial = this.backMaterial;
     this.renderer.setRenderTarget(this.backTarget);
     this.renderer.setClearColor(0x8080ff, 0);
@@ -335,6 +401,7 @@ export class IceStage {
     this.renderer.setRenderTarget(null);
     this.scene.overrideMaterial = null;
     this.quad.visible = true;
+    this.fog.visible = this.fogEnabled;
     this.renderer.render(this.scene, this.camera);
   }
 }
