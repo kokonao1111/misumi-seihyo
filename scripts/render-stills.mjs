@@ -16,7 +16,7 @@ const JOBS = [
   { name: 'still-night', q: 's=ball&k=0.74&p=night&w=夜', w: 900, h: 1100 },
   { name: 'still-haitatsu', q: 's=cubes&k=0.74&w=朝', w: 900, h: 1100 },
   { name: 'still-kaisha', q: 's=kanme&k=0.78&w=年', w: 900, h: 1100 },
-  { name: 'kiriwake', q: 's=column&k=0.95&w=36&v=1', w: 1200, h: 1500 },
+  { name: 'kiriwake', q: 's=column&k=0.82&w=36&v=1', w: 1200, h: 1500 },
 ];
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 for (const j of JOBS) {

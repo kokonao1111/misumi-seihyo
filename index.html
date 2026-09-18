@@ -24,35 +24,105 @@
       </div>
     </section>
 
-    <!-- はじめに -->
-    <section class="sheet intro">
-      <div class="intro__grid">
-        <h2 class="intro__title reveal">氷は、水と時間だけで<br>できています。</h2>
-        <div class="intro__body reveal">
-          <p>材料は水だけ。足すものも、隠すものもありません。だから氷は、つくり方がそのまま見た目に出ます。急いで凍らせれば、逃げ遅れた空気が白い芯になって残る。ゆっくり凍らせれば、向こう側の文字が読めるほど澄む。</p>
-          <p>私たちは92年間、同じ缶、同じ温度、同じ48時間で氷をつくってきました。早くつくる方法はいくつもありますが、どれも少しだけ濁ります。その「少し」を、グラスを持つ人は見ています。</p>
-          <a class="more" href="./junpyo/">純氷のつくり方を見る</a>
+    <!-- 2章：水と時間 -->
+    <section class="stage stage--chapter" data-stage="intro">
+      <div class="stage__pin">
+        <div class="chapter__text">
+          <h2>氷は、水と時間だけで<br>できています。</h2>
+          <p>材料は水だけ。足すものも、隠すものもありません。だから氷は、つくり方がそのまま見た目に出ます。</p>
+          <p class="pc-only">私たちは92年間、同じ缶、同じ温度、同じ48時間で氷をつくってきました。早くつくる方法はいくつもありますが、どれも少しだけ濁ります。その「少し」を、グラスを持つ人は見ています。</p>
         </div>
-        <figure class="intro__photo reveal">
-          <img src="./images/kakugori.webp" srcset="./images/kakugori-800.webp 800w, ./images/kakugori.webp 1600w" sizes="(min-width: 900px) 50vw, 100vw" width="1600" height="1600" loading="lazy" alt="向こうが透けて見える、角の立った角氷">
-          <figcaption>5cm角の角氷。氷柱から切り出し、角を立てたまま届けます。</figcaption>
-        </figure>
+        <img class="stage__still" src="./images/kakugori-800.webp" width="800" height="800" loading="lazy" alt="向こうが透けて見える、角の立った角氷">
+        <div class="stage__grab" data-grab></div>
       </div>
     </section>
 
-    <!-- 3つの数字 -->
-    <section class="sheet trio" aria-label="三澄の氷を決める3つの数字">
-      <div class="trio__item reveal">
-        <p class="figure"><span>−10</span><small>℃</small></p>
-        <p>冷やしすぎない。氷が内側へ向かって、1時間に数ミリずつ育つ温度です。</p>
+    <!-- 3章：澄む -->
+    <section class="stage stage--clarity" data-stage="clarity">
+      <div class="stage__pin">
+        <div class="clarity__head">
+          <h2 class="label">純氷とは</h2>
+          <p class="clarity__ask">同じ水でも、<br>凍らせる時間で<br>ここまで変わります。</p>
+        </div>
+        <div class="clarity__meter" aria-live="off">
+          <p class="clarity__caption">凍らせた時間</p>
+          <p class="clarity__hours"><span id="hours">3</span><small>時間</small></p>
+          <div class="clarity__bar" aria-hidden="true"><i id="hoursBar"></i></div>
+          <p class="clarity__note" id="clarityNote">家庭の冷凍庫の氷。外側から一気に凍り、空気と不純物が中心に閉じ込められて白く濁ります。</p>
+        </div>
+        <div class="stage__stills">
+          <figure><img src="./images/still-cloudy.webp" width="900" height="1100" loading="lazy" alt="中心が白く濁った氷"><figcaption>3時間で凍らせた氷</figcaption></figure>
+          <figure><img src="./images/still-clear.webp" width="900" height="1100" loading="lazy" alt="向こうが透けて見える純氷"><figcaption>48時間かけた純氷</figcaption></figure>
+        </div>
+        <div class="stage__grab" data-grab></div>
       </div>
-      <div class="trio__item reveal">
-        <p class="figure"><span>48</span><small>時間</small></p>
-        <p>凍らせている間じゅう、水を動かし続けます。空気と不純物は、氷になれません。</p>
+    </section>
+
+    <!-- 4章：切り分ける -->
+    <section class="stage stage--chapter stage--cut" data-stage="cut">
+      <div class="stage__pin">
+        <div class="chapter__text">
+          <p class="chapter__count"><span id="cutCount">1</span><small>個</small></p>
+          <h2>135kgの氷柱を、<br>36貫に切り分けます。</h2>
+          <p>横に2つ、奥に2つ、縦に9つ。1貫は3.75kg。角氷も丸氷も、ここから切り出します。</p>
+          <a class="more" href="./junpyo/">純氷のつくり方を見る</a>
+        </div>
+        <img class="stage__still" src="./images/kiriwake.webp" width="1200" height="1500" loading="lazy" alt="氷柱を36個の貫目氷に切り分けた図">
+        <div class="stage__grab" data-grab></div>
       </div>
-      <div class="trio__item reveal">
-        <p class="figure"><span>135</span><small>kg</small></p>
-        <p>氷柱1本の重さ。大きくつくった氷ほど、硬く、溶けにくくなります。</p>
+    </section>
+
+    <!-- 5章：製品 -->
+    <section class="stage stage--products" data-stage="products">
+      <div class="stage__pin">
+        <h2 class="label products__label">製品</h2>
+        <div class="products__tabs" role="tablist" aria-label="製品の種類">
+          <button role="tab" type="button" aria-selected="true" data-product="0">貫目氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="1">角氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="2">丸氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="3">かち割り</button>
+        </div>
+        <div class="products__panels">
+          <article class="product is-on" data-panel="0">
+            <img class="product__still" src="./images/still-block.webp" width="900" height="1100" loading="lazy" alt="貫目氷">
+            <h3>貫目氷<small>かんめごおり</small></h3>
+            <p>氷柱を1貫ごとに切り分けた、いちばん素のかたち。お店で好きな大きさに割って使う方、氷彫刻、かき氷に。</p>
+            <dl><div><dt>価格</dt><dd>1貫（3.75kg） 650円</dd></div></dl>
+          </article>
+          <article class="product" data-panel="1">
+            <img class="product__still" src="./images/still-cubes.webp" width="900" height="1100" loading="lazy" alt="角氷">
+            <h3>角氷<small>かくごおり</small></h3>
+            <p>ロックにもハイボールにも使える立方体。角が立っているので、グラスの中でゆっくり丸くなります。</p>
+            <dl><div><dt>価格</dt><dd>3kg 980円（4・5・6cm角）</dd></div></dl>
+          </article>
+          <article class="product" data-panel="2">
+            <img class="product__still" src="./images/still-ball.webp" width="900" height="1100" loading="lazy" alt="丸氷">
+            <h3>丸氷<small>まるごおり</small></h3>
+            <p>同じ重さなら、球は表面積がいちばん小さい形です。つまり、いちばん溶けにくい。1個ずつ削り出します。</p>
+            <dl><div><dt>価格</dt><dd>12個 2,600円から</dd></div></dl>
+          </article>
+          <article class="product" data-panel="3">
+            <img class="product__still" src="./images/still-crushed.webp" width="900" height="1100" loading="lazy" alt="かち割り">
+            <h3>かち割り<small>かちわり</small></h3>
+            <p>貫目氷を手で割った、不ぞろいの氷。水割り、アイスペール、魚の冷やし込みに。</p>
+            <dl><div><dt>価格</dt><dd>1kg 320円 ／ 3kg 850円</dd></div></dl>
+          </article>
+        </div>
+        <a class="more products__more" href="./seihin/">寸法と価格の一覧</a>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <!-- 6章：夜 -->
+    <section class="stage stage--night" data-stage="night">
+      <div class="stage__pin">
+        <h2 class="night__copy"><span>薄め</span><span>ない。</span></h2>
+        <img class="stage__still" src="./images/still-night.webp" width="900" height="1100" loading="lazy" alt="暗がりで縁だけが光る丸氷">
+        <div class="night__lead">
+          <p>三澄の氷の行き先は、ほとんどが夜の店です。都内で約210軒。<br class="pc">溶けるのが遅いので、1杯を飲み終えるまで、酒の味を変えません。</p>
+          <a class="btn btn--light" href="./bar/"><span>バーの方へ</span></a>
+        </div>
+        <div class="stage__grab" data-grab></div>
       </div>
     </section>
 
@@ -67,18 +137,6 @@
         <li class="reveal"><a href="./kaisha/"><span class="toc__name">会社概要</span><span class="toc__desc">昭和9年から、向島で。あゆみ、アクセス、採用。</span></a></li>
       </ul>
     </nav>
-
-    <!-- 夜への入口 -->
-    <section class="sheet night teaser">
-      <figure class="teaser__photo reveal">
-        <img src="./images/sosogu.webp" srcset="./images/sosogu-800.webp 800w, ./images/sosogu.webp 1600w" sizes="(min-width: 900px) 58vw, 100vw" width="1600" height="1067" loading="lazy" alt="大きな角氷を入れたグラスに、琥珀色の酒を注ぐ">
-      </figure>
-      <div class="teaser__text reveal">
-        <h2>夜、グラスの中で。</h2>
-        <p>三澄の氷の行き先は、ほとんどが夜の店です。都内で約210軒。注いだ瞬間に氷が見えなくなる、と言っていただきます。</p>
-        <a class="btn btn--light" href="./bar/"><span>バーの方へ</span></a>
-      </div>
-    </section>
 
     <!-- お知らせ -->
     <section class="sheet">

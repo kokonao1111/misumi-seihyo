@@ -53,7 +53,7 @@ function oneWord(word, place) {
     ctx.font = font(size);
     const tw = ctx.measureText(word).width;
     const x = place.right ? w * place.right - tw : w * place.cx - tw / 2;
-    ctx.fillText(word, x, h * 0.5 + size * 0.36);
+    ctx.fillText(word, x, h * (place.cy ?? 0.5) + size * 0.36);
   };
 }
 
@@ -70,6 +70,17 @@ const STAGES = {
     palette: 'day', shape: 'block', cloud: 0,
     text: twoLines('急ぐと、', '濁る。'),
     layout: () => (isNarrow() ? { x: 0, y: -0.02, scale: fit(0.36) } : { x: 0.24, y: 0.0, scale: 0.62 }),
+  },
+  // トップの章：左に文章、右に氷と大きな字
+  intro: {
+    palette: 'day', shape: 'block', cloud: 0,
+    text: oneWord('水と時間', { span: 0.56, dh: 0.4, right: 0.965, cy: 0.46, mh: 0.17, my: 0.27 }),
+    layout: () => (isNarrow() ? { x: 0, y: 0.24, scale: fit(0.3) } : { x: 0.34, y: 0.02, scale: 0.56 }),
+  },
+  cut: {
+    palette: 'day', shape: 'column', cloud: 0, refr: 0.2,
+    text: oneWord('36貫', { span: 0.52, dh: 0.46, right: 0.965, cy: 0.48, mh: 0.2, my: 0.27 }),
+    layout: () => (isNarrow() ? { x: 0, y: 0.24, scale: fit(0.26) } : { x: 0.36, y: 0, scale: 0.54 }),
   },
   clarity: {
     palette: 'day', shape: 'block', cloud: 1, refr: 0.1,
@@ -112,7 +123,7 @@ async function initStage() {
 
   // 背景の文字に使う字（日本語フォントは字ごとに分割配信される）と、3Dの部品を同時に読み込む。
   // 3Dの部品は大きいので、本文の表示は待たせない
-  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年';
+  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年水時間36';
   const fontsLoaded = document.fonts.load(font(64), glyphs);
   const [{ IceStage }] = await Promise.all([
     import('./ice/stage.js'),
@@ -128,6 +139,7 @@ async function initStage() {
   const hoursEl = document.getElementById('hours');
   const barEl = document.getElementById('hoursBar');
   const noteEl = document.getElementById('clarityNote');
+  const cutEl = document.getElementById('cutCount');
   const tabs = [...document.querySelectorAll('[data-product]')];
   const panels = [...document.querySelectorAll('[data-panel]')];
   let active = null;
@@ -143,20 +155,30 @@ async function initStage() {
     panels.forEach((p, k) => p.classList.toggle('is-on', k === i));
   }
 
+  // となり合う場面へ移るときは、氷を消さずに変身させる（形は回りながら入れ替わり、字は溶けるように替わり、
+  // 位置と色はなめらかに寄る）。離れた場面へ飛んだときや最初の表示では、即座に切り替える
+  let shownOnce = false;
   function activate(s, p) {
+    const prev = active;
     active = s;
     const c = s.cfg;
-    stage.setPalette(c.palette, 0);
-    stage.setLayout(c.layout());
-    stage.setCloud(c.cloud);
+    const neighbours = prev && (prev.el.nextElementSibling === s.el || prev.el.previousElementSibling === s.el);
+    const animate = !!neighbours && !reduced;
+    stage.setPalette(c.palette, animate ? 1.1 : 0);
+    stage.setLayout(c.layout(), { instant: !animate });
+    stage.setCloud(c.cloud, { instant: !animate });
     stage.setRefraction((c.refr ?? 0.24) * (isNarrow() ? 0.7 : 1));
+    if (s.name !== 'cut') stage.setExplode(0.12);
     if (s.name === 'products') {
       productIndex = -1;
-      setProduct(Math.min(3, Math.floor(p * 4)), true);
+      setProduct(Math.min(3, Math.floor(p * 4)), !animate);
     } else {
-      stage.setShape(c.shape, { instant: true });
-      stage.setText(c.text);
+      // 最初の1回だけは、氷が回りながら現れる
+      stage.setShape(c.shape, { instant: !animate && (shownOnce || reduced) });
+      stage.setText(c.text, { fade: animate });
     }
+    shownOnce = true;
+    sections.forEach((x) => x.el.classList.toggle('is-active', x === s));
   }
 
   function update() {
@@ -189,6 +211,13 @@ async function initStage() {
     } else if (best.name === 'products') {
       setProduct(Math.min(3, Math.floor(p * 4)));
       stage.scrollTurn = 0;
+    } else if (best.name === 'cut') {
+      // スクロールに合わせて、1本の氷柱に切れ目が入り、36個に分かれていく
+      const t = clamp((p - 0.12) / 0.62);
+      const e = t * t * (3 - 2 * t);
+      stage.setExplode(e);
+      stage.scrollTurn = p * 1.3;
+      if (cutEl) cutEl.textContent = String(Math.max(1, Math.round(1 + 35 * clamp((p - 0.12) / 0.5))));
     } else {
       stage.setLayout({ ...base, y: base.y + p * 0.08 });
       stage.scrollTurn = p * 0.9 + (best.name === 'kaisha' && isNarrow() ? 0.34 : 0);

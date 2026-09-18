@@ -254,13 +254,15 @@ export const iceFrag = /* glsl */ `
     vec4 back = texture2D(uBack, uv + vec2(R0.x / aspect, R0.y) * 0.04);
     vec3 Nb = normalize(back.xyz * 2.0 - 1.0 + g * bump);
     float thick = clamp((back.a * 8.0 + 6.0) - (-vView.z), 0.0, 4.0);
+    // 全反射かどうかは3色まとめて決める（色ごとに判定が割れると、原色のまだらが出る）
+    float tirAll = dot(refract(R0, -Nb, 1.31), refract(R0, -Nb, 1.31)) < 0.001 ? 1.0 : 0.0;
     for (int i = 0; i < 3; i++) {
-      float ior = 1.31 + float(i) * 0.007;   // 色ごとにわずかに変えて縁に色のにじみを出す
+      float ior = 1.31 + float(i) * 0.004;   // 色ごとにわずかに変えて縁に色のにじみを出す
       vec3 R1 = refract(-V, N, 1.0 / ior);
       vec3 R2 = refract(R1, -Nb, ior);
       // 全反射：裏面で跳ね返った光は、壁の絵に部屋の明暗が混じる。氷の側面に出る明るい帯と暗い帯
-      float tir = 0.0;
-      if (dot(R2, R2) < 0.001) { R2 = reflect(R1, -Nb); tir = 1.0; }
+      float tir = tirAll;
+      if (tirAll > 0.5 || dot(R2, R2) < 0.001) R2 = reflect(R1, -Nb);
       vec2 off = (R1.xy + V.xy) * uRefr * (0.4 + 0.5 * thick) + (R2.xy - R1.xy) * uRefr * 0.6;
       off /= 1.0 + length(off) * 4.0;   // ずれすぎて読めなくなるのを抑える
       off.x /= aspect;

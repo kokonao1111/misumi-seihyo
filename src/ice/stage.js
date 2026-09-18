@@ -176,13 +176,16 @@ export class IceStage {
 
     // 氷柱1本の切り分け図：横2 × 奥2 × 縦9 = 36貫（静止画の書き出し用）
     const column = new Group();
-    const pg = new RoundedBoxGeometry(0.56, 0.234, 0.26, 3, 0.012);
+    const PIECE = [0.56, 0.234, 0.26];
+    const pg = roughen(new RoundedBoxGeometry(...PIECE, 3, 0.012), 0.003, 3, 5.5);
     for (let y = 0; y < 9; y++) for (let x = 0; x < 2; x++) for (let z = 0; z < 2; z++) {
       const piece = new Mesh(pg, m);
-      piece.position.set((x - 0.5) * 0.6, (y - 4) * 0.262, (z - 0.5) * 0.3);
+      piece.userData.cell = [x - 0.5, y - 4, z - 0.5];
       column.add(piece);
     }
-    column.userData = { half: new Vector3(0.28, 0.117, 0.13), bump: 0.03, tilt: [0.22, -0.66, 0], saw: 0.6, frost: 0.8, crack: 0, drops: 0 };
+    column.userData = { half: new Vector3(0.28, 0.117, 0.13), bump: 0.03, tilt: [0.22, -0.66, 0], saw: 0.6, frost: 0.8, crack: 0, drops: 0, size: 1.12 };
+    this.columnPieces = { group: column, size: PIECE };
+    this.setExplode(0.12);
     shapes.column = column;
 
     // 角氷：3つをずらして積む
@@ -266,10 +269,11 @@ export class IceStage {
     this.iceUniforms.uCrack.value = this.noCracks ? 0 : (ud.crack || 0);
     this.iceUniforms.uDrops.value = ud.drops || 0;
     this.baseTilt = ud.tilt;
+    this.shapeSize = ud.size || 1;
     if (instant) {
       if (prev) { gsap.killTweensOf(prev.scale); prev.visible = false; prev.scale.setScalar(0.001); }
       gsap.killTweensOf(next.scale);
-      next.visible = true; next.scale.setScalar(1); next.rotation.y = 0;
+      next.visible = true; next.scale.setScalar(ud.size || 1); next.rotation.y = 0;
       return;
     }
     if (prev) {
@@ -280,18 +284,34 @@ export class IceStage {
     gsap.killTweensOf([next.scale, next.rotation]);
     next.visible = true;
     next.rotation.y = -1.8;
-    gsap.to(next.scale, { x: 1, y: 1, z: 1, duration: 1.1, delay: prev ? 0.35 : 0, ease: EASE });
+    const size = ud.size || 1;
+    gsap.to(next.scale, { x: size, y: size, z: size, duration: 1.1, delay: prev ? 0.35 : 0, ease: EASE });
     gsap.to(next.rotation, { y: 0, duration: 1.4, delay: prev ? 0.35 : 0, ease: EASE });
   }
 
-  setCloud(v) { this.iceUniforms.uCloud.value = v; }
+  // 濁りは目標の値へなめらかに寄せる（場面の変わり目で急に白くならないように）
+  setCloud(v, { instant = false } = {}) { this.cloudTarget = v; if (instant) this.iceUniforms.uCloud.value = v; }
+
+  // 氷柱の切れ目の開き具合。0=ぴったり重なった1本の氷柱、1=36個がばらばらに離れる
+  setExplode(e) {
+    if (!this.columnPieces || this.explode === e) return;
+    this.explode = e;
+    const { group, size } = this.columnPieces;
+    const k = 1.004 + e * 0.42;
+    for (const piece of group.children) {
+      const [cx, cy, cz] = piece.userData.cell;
+      // 上下の段ほど遠くへ。真ん中は動かさない
+      piece.position.set(cx * size[0] * (1.004 + e * 0.38), cy * size[1] * k, cz * size[2] * (1.004 + e * 0.9));
+      piece.rotation.set(0, e * 0.22 * ((cy % 2) ? 1 : -1) * (cx > 0 ? 1 : -1), 0);
+    }
+  }
   setRefraction(v) { this.iceUniforms.uRefr.value = v; }
 
   // 氷の置き場所。x,y は画面の中心からの割合（-1〜1）、scale は画面の高さに対する大きさ
-  setLayout({ x, y, scale }, duration = 0) {
-    const t = { x, y, scale };
-    if (duration === 0) Object.assign(this.layout, t);
-    else gsap.to(this.layout, { ...t, duration, ease: EASE, overwrite: true });
+  // 毎フレーム、目標の位置へなめらかに寄せる。instant なら即座に移す
+  setLayout({ x, y, scale }, { instant = false } = {}) {
+    this.layoutTarget = { x, y, scale };
+    if (instant) Object.assign(this.layout, this.layoutTarget);
   }
 
   // 背景の文字。draw(ctx, w, h) は CSS ピクセルの座標系で白い文字を描く
@@ -372,6 +392,14 @@ export class IceStage {
     this.lastTime = now;
     const visH = 2 * this.camera.position.z * Math.tan(MathUtils.degToRad(this.camera.fov / 2));
     const visW = visH * this.camera.aspect;
+    if (this.layoutTarget) {
+      const k = forceDt === 0 ? 1 : 1 - Math.exp(-dt * 4.5);
+      for (const key of ['x', 'y', 'scale']) this.layout[key] += (this.layoutTarget[key] - this.layout[key]) * k;
+    }
+    if (this.cloudTarget !== undefined) {
+      const u = this.iceUniforms.uCloud;
+      u.value += (this.cloudTarget - u.value) * (forceDt === 0 ? 1 : 1 - Math.exp(-dt * 5));
+    }
     this.pivot.position.set(this.layout.x * visW / 2, this.layout.y * visH / 2, 0);
     this.pivot.scale.setScalar(this.layout.scale * visH / 2.6);
 
