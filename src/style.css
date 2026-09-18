@@ -758,19 +758,13 @@ table.grid--night small { color: var(--amber); }
 .prose li::before { content: ""; position: absolute; left: 0; top: 1em; width: 0.6em; height: 1px; background: currentColor; }
 .prose__date { margin-top: 4rem !important; font-size: 0.875rem; color: var(--shade); }
 
-/* ---------- 次のページ ---------- */
-.next {
-  position: relative; z-index: 1; display: grid; gap: 0.5rem; background: var(--white); border-top: 1px solid var(--frost);
-  padding: clamp(4rem, 9vw, 8rem) var(--side); overflow: hidden; isolation: isolate; transition: color 0.7s var(--ease);
-}
-.next::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--ink); transform: translateY(101%); transition: transform 0.8s var(--ease); }
-.next:hover, .next:focus-visible { color: var(--white); }
-.next:hover::before, .next:focus-visible::before { transform: none; }
-.next__label { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.2em; }
-.next__name { font-family: var(--mincho); font-weight: 900; font-size: clamp(2.6rem, 9vw, 8rem); line-height: 1.2; letter-spacing: 0.04em; }
-.next--night { background: var(--ink); color: var(--white); border-top-color: #22353f; }
-.next--night::before { background: var(--amber); }
-.next--night:hover { color: var(--ink); }
+/* ---------- ページの最後の、つづきへの案内（1行だけ。フッターの溶け時計と張り合わない大きさ） ----------
+   最後のセクションの下の余白の中に重ねて置く。高さを、引き上げた分と同じにしてあるので、フッターの位置は変わらない。
+   地色を持たないので、最後のセクションが明るい面でも夜でも、そのまま馴染む */
+.onward { position: relative; z-index: 2; height: calc(var(--gap-y) * 0.62); margin-top: calc(var(--gap-y) * -0.62); padding: 0 var(--side); display: flex; justify-content: flex-end; align-items: flex-start; }
+.onward .more { margin-top: 0; font-family: var(--mincho); font-weight: 900; font-size: clamp(1.15rem, 1.8vw, 1.5rem); letter-spacing: 0.08em; padding-right: 5rem; }
+.onward .more::after { width: 3rem; bottom: 1.3rem; }
+.onward--night { color: var(--white); }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }

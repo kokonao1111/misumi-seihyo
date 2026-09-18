@@ -415,7 +415,7 @@ function initHead() {
     const under = document.elementFromPoint(innerWidth / 2, head.offsetHeight + 2);
     head.style.pointerEvents = '';
     const onStage = !under || !!under.closest('.stage') || scrollY < 40;
-    const dark = !!under?.closest('.night, .next--night, .foot');
+    const dark = !!under?.closest('.night, .onward--night, .foot');
     head.classList.toggle('is-solid', !onStage);
     head.classList.toggle('is-dark', !onStage && dark);
   };

@@ -65,7 +65,10 @@ void main() {
     // 夜：冷たい光の網を薄く足す。ポインタのそばだけ琥珀がさす
     vec3 glow = vec3(0.42, 0.72, 0.84) * light * (0.1 + 0.08 * band) + vec3(0.95, 0.56, 0.18) * c * near * 0.16;
     float dim = v * 0.3;
-    gl_FragColor = vec4(glow * (1.0 - dim), dim);   // あらかじめ透明度を掛けた色。光は足し、周辺は暗くする
+    // 出力は「あらかじめ透明度を掛けた色」。色が透明度を超えると不正な値になり、透明度がちょうど0の所では
+    // 光ごと捨てられて、丸い跡が出る。光の分の透明度を持たせたうえで、周辺の陰りを重ねる
+    float lightA = clamp(max(glow.r, max(glow.g, glow.b)), 0.0, 1.0);
+    gl_FragColor = vec4(glow * (1.0 - dim), lightA + dim * (1.0 - lightA));
   } else {
     // 昼：光の網のすき間と、窓明かりの帯の外に、薄い青い陰を落とす
     float shade = 0.105 * (1.0 - light) * (0.45 + 0.55 * (1.0 - band)) + 0.03 * (1.0 - band) + v * 0.075;
@@ -101,7 +104,7 @@ export function initAmbient({ reduced = false } = {}) {
   // 描く対象：3Dの場面ではない、紙面・次のページへのリンク・フッター
   const targets = [...document.querySelectorAll('main > :not(.stage), .foot')].map((el) => ({
     el,
-    mode: el.matches('.night, .next--night, .foot') ? 1 : el.matches('.cta, .shop') ? 2 : 0,
+    mode: el.matches('.night, .onward--night, .foot') ? 1 : el.matches('.cta, .shop') ? 2 : 0,
   }));
 
   const pointer = { x: 0.5, y: 0.4, tx: 0.5, ty: 0.4 };
