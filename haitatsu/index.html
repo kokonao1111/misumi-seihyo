@@ -22,6 +22,10 @@
     </section>
 
     <section class="sheet delivery">
+      <div class="nowrun reveal" aria-live="off">
+        <p class="nowrun__line" id="nowrunLine">毎朝5時に、1便が工場を出ます。</p>
+        <p class="nowrun__sub" id="nowrunSub">東京の、いまの時刻でお知らせしています。</p>
+      </div>
       <div class="delivery__grid">
         <div class="delivery__col reveal">
           <h2>お店へ配達します</h2>
@@ -38,10 +42,10 @@
           <table class="bin">
             <thead><tr><th scope="col">便</th><th scope="col">工場発</th><th scope="col">まわる地域</th></tr></thead>
             <tbody>
-              <tr><th scope="row">1便</th><td>5:00</td><td>銀座・新橋・日本橋</td></tr>
-              <tr><th scope="row">2便</th><td>5:20</td><td>浅草・上野・湯島</td></tr>
-              <tr><th scope="row">3便</th><td>6:40</td><td>錦糸町・両国・門前仲町</td></tr>
-              <tr><th scope="row">4便</th><td>8:30</td><td>神田・赤坂・六本木</td></tr>
+              <tr data-bin="300,450"><th scope="row">1便</th><td>5:00</td><td>銀座・新橋・日本橋</td></tr>
+              <tr data-bin="320,480"><th scope="row">2便</th><td>5:20</td><td>浅草・上野・湯島</td></tr>
+              <tr data-bin="400,570"><th scope="row">3便</th><td>6:40</td><td>錦糸町・両国・門前仲町</td></tr>
+              <tr data-bin="510,660"><th scope="row">4便</th><td>8:30</td><td>神田・赤坂・六本木</td></tr>
             </tbody>
           </table>
           <p class="delivery__note">夏の土曜だけ、かき氷屋さん向けに13時発の臨時便を出します。</p>

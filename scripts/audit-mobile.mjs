@@ -18,8 +18,12 @@ for (const p of PAGES) {
   await page.waitForTimeout(2500);
   const name = p || 'top/';
 
+  // ページ全体が画面より広くなっていないか（広がると、右端のメニューが画面の外へ出る）
+  const pageWide = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, innerWidth));
+  if (pageWide > +W + 1) problems.push(`${name} ページの幅が画面を超えている: ${pageWide}px（画面 ${W}px）`);
+
   // 横はみ出し
-  const wide = await page.evaluate(() => [...document.querySelectorAll('body *')].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > innerWidth + 1 || r.left < -1) && getComputedStyle(el).position !== 'fixed' && !el.matches('.skip') && !el.closest('[role="region"]') && !el.closest('.teaser__photo, .night__photo--b'); }).slice(0, 5).map((el) => `${el.tagName}.${el.className}`));
+  const wide = await page.evaluate((WIDTH) => [...document.querySelectorAll('body *')].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > WIDTH + 1 || r.left < -1) && getComputedStyle(el).position !== 'fixed' && !el.matches('.skip') && !el.closest('[role="region"]') && !el.closest('.teaser__photo, .night__photo--b'); }).slice(0, 5).map((el) => `${el.tagName}.${el.className}`), +W);
   if (wide.length) problems.push(`${name} 横はみ出し: ${wide.join(', ')}`);
 
   // 3Dの場面の中の重なり

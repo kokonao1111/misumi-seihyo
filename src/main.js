@@ -136,6 +136,11 @@ const STAGES = {
     text: null,
     layout: () => (isNarrow() ? { x: 0, y: 0.2, scale: fit(0.27) } : { x: 0.36, y: -0.02, scale: 0.54 }),
   },
+  ayumi: {
+    palette: 'day', shape: null, cloud: 0, glyphs: 5,
+    text: null,
+    layout: () => ({ x: 0.36, y: 0, scale: 0.5 }),
+  },
   cut: {
     palette: 'day', shape: 'column', cloud: 0, refr: 0.2, glyphs: 3,
     text: oneWord('36貫', { span: 0.52, dh: 0.46, right: 0.965, cy: 0.48, mh: 0.2, my: 0.27 }),
@@ -207,6 +212,20 @@ function makeState(p) {
 }
 const lerpN = (a, b, t) => a + (b - a) * t;
 
+// 会社概要の「あゆみ」。年代に合わせて、氷の形も変わる
+const AYUMI = [
+  { era: '昭和9年', west: '1934年', shape: 'kanme', text: '初代・三澄 清吉が、向島で氷の小売をはじめる。リヤカー1台。' },
+  { era: '昭和20年', west: '1945年', shape: 'kanme', text: '空襲で店を焼失。翌年、同じ場所で再開する。' },
+  { era: '昭和27年', west: '1952年', shape: 'column', text: '製氷槽を据え、自社での製氷をはじめる。アイス缶40本。' },
+  { era: '昭和31年', west: '1956年', shape: 'column', text: '株式会社にする。' },
+  { era: '昭和39年', west: '1964年', shape: 'column', text: '東京五輪の年、家庭への配達が最多に。1日600軒。' },
+  { era: '昭和48年', west: '1973年', shape: 'cubes', text: '冷蔵庫が行きわたり、家庭向けの配達をやめる。飲食店向けに絞る。' },
+  { era: '平成11年', west: '1999年', shape: 'ball', text: '丸氷の削り出しをはじめる。' },
+  { era: '平成30年', west: '2018年', shape: 'block', text: '四代目が継ぐ。貯氷庫を建て替え、アイス缶を120本に。' },
+  { era: '令和6年', west: '2024年', shape: 'block', text: '創業90年。' },
+];
+const ayumiText = (i) => oneWord(AYUMI[i].era, { span: 0.6, dh: 0.34, right: 0.965, cy: 0.48, glyphs: 5 });
+
 const NOTES = [
   [12, '家庭の冷凍庫の氷。外側から一気に凍り、空気と不純物が中心に閉じ込められて白く濁ります。'],
   [30, '製氷機の氷。見た目は透けてきますが、芯にはまだ細かい気泡が残っています。溶けるのも早い。'],
@@ -221,7 +240,7 @@ async function initStage() {
 
   // 背景の文字に使う字（日本語フォントは字ごとに分割配信される）と、3Dの部品を同時に読み込む。
   // 3Dの部品は大きいので、本文の表示は待たせない
-  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年水時間36注送気凍芯脱缶検品';
+  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年水時間36注送気凍芯脱缶検品昭和平成令0123456789';
   const fontsLoaded = document.fonts.load(font(64), glyphs);
   const [{ IceStage }] = await Promise.all([
     import('./ice/stage.js'),
@@ -248,6 +267,20 @@ async function initStage() {
     if (makeEls.note) makeEls.note.textContent = MAKE_STEPS[i].note;
     makeEls.steps.forEach((el, k) => { el.classList.toggle('is-now', k === i); el.classList.toggle('is-done', k < i); });
   }
+  const ayumiEls = { west: document.getElementById('ayumiWest'), text: document.getElementById('ayumiText'), steps: [...document.querySelectorAll('[data-ayumi-step]')] };
+  let ayumiIndex = -1;
+  function setAyumi(i, instant) {
+    if (i === ayumiIndex) return;
+    ayumiIndex = i;
+    const a = AYUMI[i];
+    if (isNarrow() && active) stage.setLayout(layoutOf(active, a.shape), { instant });
+    stage.setShape(a.shape, { instant: instant || reduced });
+    stage.setText(ayumiText(i), { fade: !(instant || reduced) });
+    if (ayumiEls.west) ayumiEls.west.textContent = a.west;
+    if (ayumiEls.text) ayumiEls.text.textContent = a.text;
+    ayumiEls.steps.forEach((el, k) => { el.classList.toggle('is-now', k === i); el.classList.toggle('is-done', k < i); });
+  }
+  const ayumiAt = (p) => Math.min(AYUMI.length - 1, Math.floor(p * AYUMI.length));
   const makeStepAt = (p) => MAKE_STEPS.reduce((acc, st, k) => (p >= st.at ? k : acc), 0);
   const tabs = [...document.querySelectorAll('[data-product]')];
   const panels = [...document.querySelectorAll('[data-panel]')];
@@ -282,13 +315,17 @@ async function initStage() {
     const animate = !!neighbours && !reduced;
     if (isNarrow()) { s.band = measureBand(s.el); band = s.band; }
     stage.setPalette(c.palette, animate ? 1.1 : 0);
-    stage.setLayout(layoutOf(s, s.name === 'products' ? PRODUCTS[Math.min(3, Math.floor(p * 4))].shape : undefined), { instant: !animate });
+    const firstShape = s.name === 'products' ? PRODUCTS[Math.min(3, Math.floor(p * 4))].shape : s.name === 'ayumi' ? AYUMI[ayumiAt(p)].shape : undefined;
+    stage.setLayout(layoutOf(s, firstShape), { instant: !animate });
     stage.setCloud(c.cloud, { instant: !animate });
     stage.setRefraction((c.refr ?? 0.24) * (isNarrow() ? 0.7 : 1));
     if (s.name !== 'cut') stage.setExplode(0.12);
     if (s.name === 'products') {
       productIndex = -1;
       setProduct(Math.min(3, Math.floor(p * 4)), !animate);
+    } else if (s.name === 'ayumi') {
+      ayumiIndex = -1;
+      setAyumi(ayumiAt(p), !animate);
     } else if (s.name === 'make') {
       makeIndex = -1;
       stage.setMake(makeState(p).state);
@@ -321,7 +358,7 @@ async function initStage() {
     const p = clamp(-r.top / Math.max(1, r.height - vh));
     if (best !== active) activate(best, p);
 
-    const base = layoutOf(best, best.name === 'products' ? PRODUCTS[Math.max(0, productIndex)].shape : undefined);
+    const base = layoutOf(best, best.name === 'products' ? PRODUCTS[Math.max(0, productIndex)].shape : best.name === 'ayumi' ? AYUMI[Math.max(0, ayumiIndex)].shape : undefined);
     if (best.name === 'hero') {
       stage.setLayout({ ...base, y: base.y + p * (isNarrow() ? 0.03 : 0.12) });
       stage.scrollTurn = p * 1.1 + (isNarrow() ? 0.34 : 0);   // スマホは正面寄りに向けて、うしろの字を読みやすく
@@ -337,6 +374,9 @@ async function initStage() {
     } else if (best.name === 'products') {
       setProduct(Math.min(3, Math.floor(p * 4)));
       stage.scrollTurn = 0;
+    } else if (best.name === 'ayumi') {
+      setAyumi(ayumiAt(p));
+      stage.scrollTurn = (p * AYUMI.length - ayumiAt(p)) * 0.5;   // ひとつの年代のあいだ、ゆっくり向きを変える
     } else if (best.name === 'make') {
       const m = makeState(p);
       stage.setMake(m.state);
@@ -368,6 +408,12 @@ async function initStage() {
     const sec = sections.find((x) => x.name === 'make').el;
     const top = sec.getBoundingClientRect().top + scrollY;
     scrollToY(top + (MAKE_STEPS[i].at + 0.03) * (sec.offsetHeight - innerHeight));
+  }));
+
+  ayumiEls.steps.forEach((el, i) => el.addEventListener('click', () => {
+    const sec = sections.find((x) => x.name === 'ayumi').el;
+    const top = sec.getBoundingClientRect().top + scrollY;
+    scrollToY(top + ((i + 0.5) / AYUMI.length) * (sec.offsetHeight - innerHeight));
   }));
 
   document.querySelectorAll('[data-grab]').forEach((z) => z.addEventListener('pointerdown', (e) => stage.grab(e)));
@@ -467,6 +513,41 @@ function initTables() {
   });
 }
 
+/* ---------- 配達：いま、どの便が走っているか（東京の時刻で） ---------- */
+function initNowRun() {
+  const line = document.getElementById('nowrunLine');
+  const sub = document.getElementById('nowrunSub');
+  if (!line) return;
+  const rows = [...document.querySelectorAll('[data-bin]')].map((tr) => {
+    const [from, to] = tr.dataset.bin.split(',').map(Number);   // 工場を出る時刻と戻る時刻（0時からの分）
+    return { tr, from, to, name: tr.querySelector('th').textContent.trim(), area: tr.querySelector('td:last-child').textContent.trim() };
+  });
+  const fmt = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', hour: 'numeric', minute: '2-digit', weekday: 'short', month: 'numeric', day: 'numeric', hour12: false });
+  const span = (min) => (min >= 60 ? `${Math.floor(min / 60)}時間${min % 60 ? `${min % 60}分` : ''}` : `${min}分`);
+  const tick = () => {
+    const parts = Object.fromEntries(fmt.formatToParts(new Date()).map((x) => [x.type, x.value]));
+    const h = Number(parts.hour) % 24, m = Number(parts.minute);
+    const now = h * 60 + m;
+    const clock = `${h}:${String(m).padStart(2, '0')}`;
+    const sunday = parts.weekday === '日';
+    const newYear = parts.month === '1' && parts.day === '1';
+    const running = sunday || newYear ? [] : rows.filter((r) => now >= r.from && now < r.to);
+    rows.forEach((r) => r.tr.classList.toggle('is-running', running.includes(r)));
+    if (sunday || newYear) line.textContent = `いま ${clock}。今日は${newYear ? '元日' : '日曜'}で、配達はお休みです。`;
+    else if (running.length === 1) line.textContent = `いま ${clock}。${running[0].name}が、${running[0].area}をまわっています。`;
+    else if (running.length > 1) line.textContent = `いま ${clock}。${running.map((r) => r.name).join('、')}が走っています。`;
+    else if (now < rows[0].from) line.textContent = `いま ${clock}。${now >= 240 ? '1便の積み込み中です。' : '工場はまだ暗く、製氷槽だけが動いています。'}5:00に出ます。`;
+    else line.textContent = `いま ${clock}。今日の配達は終わりました。`;
+    // 注文の締め切りまで
+    const saturday = parts.weekday === '土';
+    if (sunday) sub.textContent = '月曜の分のご注文は、ファクスとLINEで受けています。月曜は朝5時、1便から出ます。';
+    else if (now < 900) sub.textContent = `${saturday ? '月曜' : '明日'}の分のご注文は、15時まで。あと${span(900 - now)}です。`;
+    else sub.textContent = `今日の受付は15時で終わりました。これからのご注文は、${saturday ? '火曜' : parts.weekday === '金' ? '月曜' : 'あさって'}のお届けになります。`;   // 日曜は配達がないので、金曜は月曜に、土曜は火曜になる
+  };
+  tick();
+  setInterval(tick, 20000);
+}
+
 /* ---------- フォーム（見本：送信はしない） ---------- */
 function initForm() {
   const form = document.getElementById('form');
@@ -527,6 +608,7 @@ initReveal();
 initTables();
 initHead();
 initMenu();
+initNowRun();
 initForm();
 initMelt();
 initStage().catch(() => root.classList.remove('has-ice'));
