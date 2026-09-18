@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!--page {"title":"お問い合わせ｜三澄製氷","desc":"ご注文、試しの氷、工場見学、採用のご相談はこちらから。お急ぎの方はお電話ください。03-0000-4848（月曜〜土曜 4:00〜15:00）","root":"../","current":"toiawase","path":"toiawase/"} -->
+<!--@head-->
+</head>
+<body>
+<!--@header-->
+
+  <main id="main">
+    <header class="sheet pagehead">
+      <h1 class="reveal">お問い合わせ</h1>
+      <p class="reveal">ご注文、試しの氷、見学、採用のご相談はこちらから。お急ぎの方は、お電話がいちばん早いです。</p>
+    </header>
+
+    <section class="sheet contact">
+      <div class="contact__head reveal">
+        <p class="contact__tel"><a href="tel:0300004848">03-0000-4848</a><small>月曜〜土曜 4:00〜15:00</small></p>
+        <table class="plain contact__ways">
+          <tr><th scope="row">ファクス</th><td>03-0000-4849（いつでも）</td></tr>
+          <tr><th scope="row">お返事</th><td>フォームからのご連絡には、1営業日以内にお電話で折り返します。</td></tr>
+          <tr><th scope="row">朝が早い理由</th><td>製氷と配達が4時に始まるためです。15時を過ぎると、誰もいません。</td></tr>
+        </table>
+      </div>
+      <form class="form reveal" id="form" novalidate>
+        <div class="form__row">
+          <label for="f-name">お名前</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="form__row">
+          <label for="f-shop">お店の名前<small>個人の方は空欄で</small></label>
+          <input id="f-shop" name="shop" type="text" autocomplete="organization">
+        </div>
+        <div class="form__row">
+          <label for="f-tel">電話番号</label>
+          <input id="f-tel" name="tel" type="tel" autocomplete="tel" inputmode="tel" required>
+        </div>
+        <fieldset class="form__row form__row--radio">
+          <legend>ご用件</legend>
+          <label><input type="radio" name="kind" value="tameshi" checked><span>試しの氷を頼みたい</span></label>
+          <label><input type="radio" name="kind" value="chumon"><span>注文・見積もり</span></label>
+          <label><input type="radio" name="kind" value="kengaku"><span>工場見学</span></label>
+          <label><input type="radio" name="kind" value="saiyo"><span>採用</span></label>
+          <label><input type="radio" name="kind" value="sonota"><span>その他</span></label>
+        </fieldset>
+        <div class="form__row">
+          <label for="f-body">内容</label>
+          <textarea id="f-body" name="body" rows="5"></textarea>
+        </div>
+        <p class="form__agree">送信すると、<a href="../privacy/">個人情報の取り扱い</a>に同意したことになります。</p>
+        <button class="btn" type="submit"><span>送信する</span></button>
+        <p class="form__done" id="formDone" role="status" hidden>ありがとうございます。1営業日以内に、お電話で折り返します。</p>
+      </form>
+    </section>
+  </main>
+
+<!--@footer-->
+</body>
+</html>

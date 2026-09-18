@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!--page {"title":"純氷とは｜三澄製氷","desc":"同じ水でも、凍らせる時間で氷はここまで変わります。−10℃、48時間、135kg。三澄製氷の純氷が澄む理由と、1本の氷柱ができるまでの3日間。","root":"../","current":"junpyo","path":"junpyo/"} -->
+<!--@head-->
+</head>
+<body>
+<!--@header-->
+
+  <main id="main">
+
+    <!-- 濁りの比較 -->
+    <section class="stage stage--clarity" data-stage="clarity">
+      <div class="stage__pin">
+        <div class="clarity__head">
+          <h1 class="label">純氷とは</h1>
+          <p class="clarity__ask">同じ水でも、<br>凍らせる時間で<br>ここまで変わります。</p>
+        </div>
+        <div class="clarity__meter" aria-live="off">
+          <p class="clarity__caption">凍らせた時間</p>
+          <p class="clarity__hours"><span id="hours">3</span><small>時間</small></p>
+          <div class="clarity__bar" aria-hidden="true"><i id="hoursBar"></i></div>
+          <p class="clarity__note" id="clarityNote">家庭の冷凍庫の氷。外側から一気に凍り、空気と不純物が中心に閉じ込められて白く濁ります。</p>
+        </div>
+        <div class="stage__stills">
+          <figure><img src="../images/still-cloudy.webp" width="900" height="1100" alt="中心が白く濁った氷"><figcaption>3時間で凍らせた氷</figcaption></figure>
+          <figure><img src="../images/still-clear.webp" width="900" height="1100" alt="向こうが透けて見える純氷"><figcaption>48時間かけた純氷</figcaption></figure>
+        </div>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <!-- なぜ澄むのか -->
+    <section class="sheet why" id="naze">
+      <h2 class="why__title reveal">澄む理由は、<br>3つの数字です。</h2>
+      <div class="why__item why__item--a reveal">
+        <p class="figure"><span>−10</span><small>℃</small></p>
+        <h3>冷やしすぎない。</h3>
+        <p>家庭の冷凍庫は−18℃。氷は外側から一気に固まり、空気の逃げ場がなくなります。三澄の製氷槽は−10℃前後。氷が内側へ向かって、1時間に数ミリずつ育つ温度です。</p>
+      </div>
+      <div class="why__item why__item--b reveal">
+        <p class="figure"><span>48</span><small>時間</small></p>
+        <h3>水を止めない。</h3>
+        <p>凍らせている間じゅう、缶の底から空気を送って水を動かします。動いている水は、空気や不純物を抱えたままでは凍れません。純粋な水だけが先に氷になり、残りは中心へ追いやられます。最後に残った芯の水は、抜いて新しい水と入れ替えます。</p>
+      </div>
+      <div class="why__item why__item--c reveal">
+        <p class="figure"><span>135</span><small>kg</small></p>
+        <h3>大きくつくって、切り出す。</h3>
+        <p>1本の氷柱は135kg、昔の単位で36貫。大きな塊でゆっくり凍らせた氷は結晶が大きく、硬く、溶けにくくなります。角氷も丸氷も、この氷柱から切り出します。</p>
+      </div>
+      <figure class="why__photo why__photo--c reveal">
+        <img src="../images/kiriwake.webp" width="1200" height="1500" loading="lazy" alt="氷柱を36個の貫目氷に切り分けた図">
+        <figcaption>氷柱1本の切り分け。横2 × 奥2 × 縦9で、36貫。</figcaption>
+      </figure>
+    </section>
+
+    <!-- 製氷日誌 -->
+    <section class="sheet factory" id="tsukurikata">
+      <div class="factory__head">
+        <h2 class="reveal">1本の氷柱が<br>できるまで。</h2>
+        <p class="reveal">工場では、缶ごとに日誌をつけています。下は、ある1本の記録です。書いてあることは、92年前とほとんど変わりません。</p>
+      </div>
+
+      <div class="log reveal" role="region" aria-label="製氷日誌" tabindex="0">
+        <table>
+          <caption>製氷日誌<span>缶番号 14 ／ 令和8年9月</span></caption>
+          <thead>
+            <tr><th scope="col">日</th><th scope="col">時刻</th><th scope="col">作業</th><th scope="col">記録</th><th scope="col">担当</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>7日</td><td>5:30</td><th scope="row">注水</th><td>ろ過した水を缶へ。水温16℃。槽の温度−10.2℃。</td><td><i>三澄</i></td></tr>
+            <tr><td>7日</td><td>5:40</td><th scope="row">送気はじめ</th><td>缶の底へ管を下ろし、空気を送る。以後、止めない。</td><td><i>三澄</i></td></tr>
+            <tr><td>8日</td><td>14:00</td><th scope="row">芯水の入れ替え</th><td>氷の厚み、壁から9cm。中心に残った水を抜き、新しい水に替える。</td><td><i>小池</i></td></tr>
+            <tr><td>9日</td><td>5:30</td><th scope="row">脱缶</th><td>48時間。缶をぬるま湯にくぐらせ、氷柱を抜く。135kg。</td><td><i>小池</i></td></tr>
+            <tr><td>9日</td><td>6:00</td><th scope="row">検品</th><td>光に透かして芯とひびを見る。良。貯氷庫へ。</td><td><i>三澄</i></td></tr>
+            <tr><td>10日</td><td>4:00</td><th scope="row">切り出し・出荷</th><td>1日寝かせて締まった氷を切り分ける。貫目36、うち8を丸氷へ。</td><td><i>早川</i></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="factory__aside reveal">検品で合わなかった氷は、砕いて魚屋さんの冷やし込み用に回します。<br class="pc">捨てる氷はありません。</p>
+    </section>
+
+    <!-- 比べる -->
+    <section class="sheet compare">
+      <h2 class="reveal">家庭の氷と、比べると。</h2>
+      <div class="reveal" role="region" aria-label="氷の比較" tabindex="0">
+        <table class="grid">
+          <thead>
+            <tr><th scope="col"></th><th scope="col">家庭の冷凍庫の氷</th><th scope="col">製氷機の氷</th><th scope="col" class="is-ours">三澄の純氷</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">凍らせる時間</th><td>約3時間</td><td>20〜30分</td><td class="is-ours">48時間</td></tr>
+            <tr><th scope="row">温度</th><td>−18℃</td><td>−20℃前後</td><td class="is-ours">−10℃</td></tr>
+            <tr><th scope="row">見た目</th><td>中心が白い</td><td>全体に細かく曇る</td><td class="is-ours">向こうの字が読める</td></tr>
+            <tr><th scope="row">硬さ</th><td>割れやすい</td><td>もろい</td><td class="is-ours">包丁で削れる硬さ</td></tr>
+            <tr><th scope="row">におい</th><td>冷凍庫のにおいが移る</td><td>機械の手入れしだい</td><td class="is-ours">なし</td></tr>
+            <tr><th scope="row">ロックグラスで溶けきるまで</th><td>約35分</td><td>約25分</td><td class="is-ours">約95分（丸氷6.5cm）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="compare__note reveal">溶ける時間は、室温24℃で当社が測った目安です。グラスや酒の温度で変わります。</p>
+    </section>
+
+    <!-- 質問 -->
+    <section class="sheet faq">
+      <h2 class="reveal">よく聞かれること</h2>
+      <dl class="faq__list">
+        <div class="reveal"><dt>特別な水を使っているのですか。</dt><dd>いいえ、東京の水道水です。活性炭と中空糸膜でろ過して、塩素とにおいを取っています。氷の澄み方を決めるのは、水の銘柄より凍らせ方です。</dd></div>
+        <div class="reveal"><dt>ときどき、氷の中に白い筋が見えます。</dt><dd>切り出すときの力で入る、ごく浅いひびです。味にも溶け方にも影響しません。深いひびや白い芯が残ったものは、検品で外しています。</dd></div>
+        <div class="reveal"><dt>届いた氷は、どう保存すればいいですか。</dt><dd>袋の口をしっかり閉じて、冷凍庫へ。におい移りを防ぐため、魚や肉とは段を分けてください。2週間ほどで使い切るのが目安です。長く置くと表面に霜がつき、角が丸くなります。</dd></div>
+        <div class="reveal"><dt>工場は見学できますか。</dt><dd>できます。火曜と木曜の9時から、1回5名まで。脱缶と切り出しをご覧いただけます。長靴はお貸しします。<a href="../toiawase/">お問い合わせ</a>からお申し込みください。</dd></div>
+      </dl>
+    </section>
+
+    <a class="next" href="../seihin/"><span class="next__label">次のページ</span><span class="next__name">製品</span></a>
+  </main>
+
+<!--@footer-->
+</body>
+</html>

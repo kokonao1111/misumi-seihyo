@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!--page {"title":"製品｜三澄製氷","desc":"貫目氷、角氷、丸氷、かち割り。三澄製氷の純氷の寸法、入数、価格の一覧です。かき氷用の氷、氷彫刻用の氷柱、花氷などの特注も承ります。","root":"../","current":"seihin","path":"seihin/"} -->
+<!--@head-->
+</head>
+<body>
+<!--@header-->
+
+  <main id="main">
+
+    <!-- 形の切り替え -->
+    <section class="stage stage--products" data-stage="products">
+      <div class="stage__pin">
+        <h1 class="label products__label">製品</h1>
+        <div class="products__tabs" role="tablist" aria-label="製品の種類">
+          <button role="tab" type="button" aria-selected="true" data-product="0">貫目氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="1">角氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="2">丸氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="3">かち割り</button>
+        </div>
+        <div class="products__panels">
+          <article class="product is-on" data-panel="0">
+            <img class="product__still" src="../images/still-block.webp" width="900" height="1100" loading="lazy" alt="貫目氷">
+            <h2>貫目氷<small>かんめごおり</small></h2>
+            <p>氷柱を1貫（3.75kg）ごとに切り分けた、いちばん素のかたち。お店で好きな大きさに割って使う方、氷彫刻、かき氷に。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>約 28 × 13 × 12 cm</dd></div>
+              <div><dt>重さ</dt><dd>1貫 3.75kg（半貫もあります）</dd></div>
+              <div><dt>価格</dt><dd>1貫 650円</dd></div>
+            </dl>
+          </article>
+          <article class="product" data-panel="1">
+            <img class="product__still" src="../images/still-cubes.webp" width="900" height="1100" loading="lazy" alt="角氷">
+            <h2>角氷<small>かくごおり</small></h2>
+            <p>ロックにもハイボールにも使える立方体。機械でつくる氷と違って角が立っているので、グラスの中でゆっくり丸くなります。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>4cm角 ／ 5cm角 ／ 6cm角</dd></div>
+              <div><dt>入数</dt><dd>3kg袋（5cm角で約26個）</dd></div>
+              <div><dt>価格</dt><dd>3kg 980円</dd></div>
+            </dl>
+          </article>
+          <article class="product" data-panel="2">
+            <img class="product__still" src="../images/still-ball.webp" width="900" height="1100" loading="lazy" alt="丸氷">
+            <h2>丸氷<small>まるごおり</small></h2>
+            <p>同じ重さなら、球は表面積がいちばん小さい形です。つまり、いちばん溶けにくい。1個ずつ削り出し、ひびと曇りを見てから箱に詰めます。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>直径 6.5cm ／ 7cm</dd></div>
+              <div><dt>入数</dt><dd>12個入り</dd></div>
+              <div><dt>価格</dt><dd>6.5cm 2,600円 ／ 7cm 2,900円</dd></div>
+            </dl>
+          </article>
+          <article class="product" data-panel="3">
+            <img class="product__still" src="../images/still-crushed.webp" width="900" height="1100" loading="lazy" alt="かち割り">
+            <h2>かち割り<small>かちわり</small></h2>
+            <p>貫目氷を手で割った、不ぞろいの氷。水割り、アイスペール、魚の冷やし込みに。ご家庭用に1kgの小袋もあります。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>3〜5cm（不ぞろい）</dd></div>
+              <div><dt>入数</dt><dd>1kg袋 ／ 3kg袋</dd></div>
+              <div><dt>価格</dt><dd>1kg 320円 ／ 3kg 850円</dd></div>
+            </dl>
+          </article>
+        </div>
+        <p class="products__tax">価格はすべて税込、工場直売と配達で共通です。</p>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <!-- 価格表 -->
+    <section class="sheet pricelist">
+      <div class="pricelist__head">
+        <h2 class="reveal">価格表</h2>
+        <p class="reveal">令和8年4月1日からの価格です。すべて税込。工場直売でも配達でも同じ値段です。</p>
+      </div>
+      <div class="reveal" role="region" aria-label="価格表" tabindex="0">
+        <table class="grid grid--price">
+          <thead>
+            <tr><th scope="col">品名</th><th scope="col">規格</th><th scope="col">入数</th><th scope="col">価格</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row" rowspan="2">貫目氷</th><td>1貫（約 28 × 13 × 12 cm）</td><td>3.75kg</td><td>650円</td></tr>
+            <tr><td>半貫</td><td>約1.9kg</td><td>350円</td></tr>
+            <tr><th scope="row" rowspan="3">角氷</th><td>4cm角</td><td>3kg（約50個）</td><td>980円</td></tr>
+            <tr><td>5cm角</td><td>3kg（約26個）</td><td>980円</td></tr>
+            <tr><td>6cm角</td><td>3kg（約15個）</td><td>980円</td></tr>
+            <tr><th scope="row" rowspan="2">丸氷</th><td>直径 6.5cm</td><td>12個</td><td>2,600円</td></tr>
+            <tr><td>直径 7cm</td><td>12個</td><td>2,900円</td></tr>
+            <tr><th scope="row" rowspan="2">かち割り</th><td>3〜5cm</td><td>1kg</td><td>320円</td></tr>
+            <tr><td>3〜5cm</td><td>3kg</td><td>850円</td></tr>
+            <tr><th scope="row">かき氷用</th><td>半貫を削り機に合わせて成形<small>5月〜9月</small></td><td>約1.9kg</td><td>380円</td></tr>
+            <tr><th scope="row">砕氷</th><td>魚の冷やし込み、催し用</td><td>10kg</td><td>900円</td></tr>
+            <tr><th scope="row">ドライアイス</th><td>板状。1kgから切り分けます</td><td>1kg</td><td>700円</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 特注 -->
+    <section class="sheet custom">
+      <h2 class="reveal">特注も、氷柱から切り出します。</h2>
+      <div class="custom__grid">
+        <div class="reveal">
+          <h3>寸法の指定</h3>
+          <p>お店のグラスに合わせて、1mm単位で角氷を切ります。ハイボール用の長い棒氷（3 × 3 × 12 cm）のご注文が増えています。3kgから、通常の角氷に1袋200円の加算です。</p>
+        </div>
+        <div class="reveal">
+          <h3>氷彫刻用の氷柱</h3>
+          <p>135kgの氷柱を、切り分けずにそのままお渡しします。ホテルや催事の彫刻師の方へ。1本 9,800円。配達は2名で伺うため、1週間前までにご予約ください。</p>
+        </div>
+        <div class="reveal">
+          <h3>花氷</h3>
+          <p>生花を閉じ込めた氷柱です。お祝いの席や夏の店先に。花が浮かないよう、3回に分けて凍らせるので6日かかります。半柱 18,000円から。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 扱い方 -->
+    <section class="sheet faq">
+      <h2 class="reveal">氷の扱い方</h2>
+      <dl class="faq__list">
+        <div class="reveal"><dt>届いたら、まず何をすればいいですか。</dt><dd>袋のまま、すぐ冷凍庫へ入れてください。表面が少し溶けた状態で凍らせ直すと、氷どうしがくっつきます。くっついたときは、袋の上から軽く叩けば離れます。</dd></div>
+        <div class="reveal"><dt>使う前に、ひと手間ありますか。</dt><dd>冷凍庫から出してすぐの氷は、表面に霜がついて白く見えます。1分ほど置くか、水にさっとくぐらせると、霜が取れて透明になります。酒を注いだときの「ピキッ」というひび割れも防げます。</dd></div>
+        <div class="reveal"><dt>どのくらい日持ちしますか。</dt><dd>2週間が目安です。氷は傷みませんが、家庭用や開け閉めの多い冷凍庫では、少しずつ昇華して角が丸くなり、においも移ります。</dd></div>
+      </dl>
+    </section>
+
+    <a class="next" href="../bar/"><span class="next__label">次のページ</span><span class="next__name">バーの方へ</span></a>
+  </main>
+
+<!--@footer-->
+</body>
+</html>

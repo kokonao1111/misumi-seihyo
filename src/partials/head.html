@@ -1,0 +1,30 @@
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <meta name="description" content="{{desc}}">
+  <meta name="theme-color" content="#e9eff1">
+  <meta property="og:site_name" content="三澄製氷">
+  <meta property="og:title" content="{{title}}">
+  <meta property="og:description" content="{{desc}}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{url}}">
+  <meta property="og:image" content="https://kokonao1111.github.io/misumi-seihyo/images/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- 架空の会社なので、検索結果には載せない -->
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="{{root}}favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@700;900&display=swap" rel="stylesheet">
+  <script>
+    // 3Dが使えるかを先に判定して、代替表示が一瞬見えてしまうのを防ぐ
+    (function () {
+      var r = document.documentElement; r.classList.add('js');
+      try {
+        if (/[?&]noice\b/.test(location.search)) return;
+        var c = document.createElement('canvas');
+        if (c.getContext('webgl2') || c.getContext('webgl')) r.classList.add('has-ice');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/src/style.css">

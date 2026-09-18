@@ -81,6 +81,16 @@ const STAGES = {
     text: null,
     layout: () => (isNarrow() ? { x: 0, y: 0.3, scale: fit(0.29) } : { x: 0.36, y: 0, scale: 0.5 }),
   },
+  haitatsu: {
+    palette: 'day', shape: 'cubes', cloud: 0,
+    text: oneWord('毎朝。', { span: 0.8, dh: 0.5, cx: 0.5, mh: 0.2, my: 0.4 }),
+    layout: () => (isNarrow() ? { x: 0, y: 0.02, scale: fit(0.3) } : { x: 0.3, y: -0.02, scale: 0.5 }),
+  },
+  kaisha: {
+    palette: 'day', shape: 'kanme', cloud: 0,
+    text: oneWord('92年。', { span: 0.8, dh: 0.5, cx: 0.5, mh: 0.2, my: 0.4 }),
+    layout: () => (isNarrow() ? { x: 0, y: 0.0, scale: fit(0.36) } : { x: 0.28, y: 0, scale: 0.6 }),
+  },
   night: {
     palette: 'night', shape: 'ball', cloud: 0, refr: 0.5,
     text: twoLines('薄め', 'ない。'),
@@ -96,12 +106,13 @@ const NOTES = [
 ];
 
 async function initStage() {
+  if (!document.querySelector('[data-stage]')) { root.classList.remove('has-ice'); return; }
   if (!root.classList.contains('has-ice')) return;
   const lowPower = (navigator.deviceMemory && navigator.deviceMemory <= 4) || navigator.hardwareConcurrency <= 4 || matchMedia('(pointer: coarse)').matches;
 
   // 背景の文字に使う字（日本語フォントは字ごとに分割配信される）と、3Dの部品を同時に読み込む。
   // 3Dの部品は大きいので、本文の表示は待たせない
-  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない';
+  const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない毎朝92年';
   const fontsLoaded = document.fonts.load(font(64), glyphs);
   const [{ IceStage }] = await Promise.all([
     import('./ice/stage.js'),
@@ -171,15 +182,16 @@ async function initStage() {
       const hours = 3 + 45 * t;
       stage.setCloud(Math.pow(1 - t, 1.25));
       stage.scrollTurn = 0.1 + t * 0.42;   // 最後はほぼ正面を向き、うしろの字が読める
-      hoursEl.textContent = String(Math.round(hours));
-      barEl.style.transform = `scaleX(${hours / 48})`;
+      if (hoursEl) hoursEl.textContent = String(Math.round(hours));
+      if (barEl) barEl.style.transform = `scaleX(${hours / 48})`;
       const ni = NOTES.findIndex(([limit]) => hours < limit);
-      if (ni !== noteIndex) { noteIndex = ni; noteEl.textContent = NOTES[ni][1]; }
+      if (ni !== noteIndex && noteEl) { noteIndex = ni; noteEl.textContent = NOTES[ni][1]; }
     } else if (best.name === 'products') {
       setProduct(Math.min(3, Math.floor(p * 4)));
       stage.scrollTurn = 0;
-    } else if (best.name === 'night') {
-      stage.scrollTurn = p * 0.8;
+    } else {
+      stage.setLayout({ ...base, y: base.y + p * 0.08 });
+      stage.scrollTurn = p * 0.9 + (best.name === 'kaisha' && isNarrow() ? 0.34 : 0);
     }
 
     if (reduced) stage.renderOnce(); else stage.start();
@@ -255,10 +267,35 @@ function initMenu() {
   addEventListener('keydown', (e) => { if (e.key === 'Escape') set(false); });
 }
 
+/* ---------- 格子の表：スマホでは1行ずつ札のように積むので、各マスに列の名前を持たせる ---------- */
+function initTables() {
+  document.querySelectorAll('table.grid').forEach((table) => {
+    const heads = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+    let group = '';
+    let left = 0;
+    table.querySelectorAll('tbody tr').forEach((tr) => {
+      const th = tr.querySelector('th');
+      const offset = th ? 0 : 1;   // 品名が上の行から続いている行は、列が1つずれる
+      if (th) { group = th.textContent.trim(); left = (th.rowSpan || 1) - 1; } else if (left > 0) { tr.dataset.group = group; left -= 1; }
+      let col = th ? 1 : 0;
+      tr.querySelectorAll('td').forEach((td) => {
+        const label = heads[col + offset] || '';
+        if (label && (td.colSpan || 1) === 1) td.dataset.label = label;   // 列をまたぐマスには名前を付けない
+        col += td.colSpan || 1;
+      });
+    });
+  });
+}
+
 /* ---------- フォーム（見本：送信はしない） ---------- */
 function initForm() {
   const form = document.getElementById('form');
+  if (!form) return;
   const done = document.getElementById('formDone');
+  // ほかのページのボタンから来たときは、ご用件を選んでおく（例：?yoken=saiyo）
+  const yoken = new URLSearchParams(location.search).get('yoken');
+  const preset = yoken && form.querySelector(`input[name="kind"][value="${CSS.escape(yoken)}"]`);
+  if (preset) preset.checked = true;
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     let bad = null;
@@ -279,7 +316,12 @@ function initMelt() {
   const timeEl = document.getElementById('meltTime');
   const pctEl = document.getElementById('meltPct');
   const homeEl = document.getElementById('meltHome');
-  const t0 = performance.now();
+  if (!timeEl) return;
+  let t0 = Date.now();
+  try {
+    const saved = Number(sessionStorage.getItem('misumi-opened'));
+    if (saved > 0) t0 = saved; else sessionStorage.setItem('misumi-opened', String(t0));
+  } catch { /* 保存できない環境では、このページを開いた時刻から数える */ }
   const MELT_MIN = 95; // 室温のグラスで丸氷（直径6.5cm）が溶けきるまでのおよその分数
   const HOME = [
     [60, '家庭の氷なら、そろそろ角が取れはじめる頃です。'],
@@ -289,9 +331,10 @@ function initMelt() {
     [Infinity, '家庭の氷なら、もう残っていません。'],
   ];
   const tick = () => {
-    const s = Math.floor((performance.now() - t0) / 1000);
+    const s = Math.floor((Date.now() - t0) / 1000);
     const m = Math.floor(s / 60);
-    timeEl.textContent = m ? `${m}分${s % 60}秒` : `${s}秒`;
+    const h = Math.floor(m / 60);
+    timeEl.textContent = h ? `${h}時間${m % 60}分` : m ? `${m}分${s % 60}秒` : `${s}秒`;
     pctEl.textContent = `${Math.min(100, (s / (MELT_MIN * 60)) * 100).toFixed(1)}%`;
     homeEl.textContent = HOME.find(([limit]) => s < limit)[1];
   };
@@ -300,6 +343,7 @@ function initMelt() {
 }
 
 initReveal();
+initTables();
 initHead();
 initMenu();
 initForm();
