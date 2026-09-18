@@ -99,15 +99,14 @@ async function initStage() {
   if (!root.classList.contains('has-ice')) return;
   const lowPower = (navigator.deviceMemory && navigator.deviceMemory <= 4) || navigator.hardwareConcurrency <= 4 || matchMedia('(pointer: coarse)').matches;
 
-  // 背景の文字に使う字だけ先に読み込む（日本語フォントは字ごとに分割配信される）
+  // 背景の文字に使う字（日本語フォントは字ごとに分割配信される）と、3Dの部品を同時に読み込む。
+  // 3Dの部品は大きいので、本文の表示は待たせない
   const glyphs = '急ぐと、濁る。澄む貫目氷角丸かち割り薄めない';
-  await Promise.race([
-    document.fonts.load(font(64), glyphs),
-    new Promise((r) => setTimeout(r, 3500)),
+  const fontsLoaded = document.fonts.load(font(64), glyphs);
+  const [{ IceStage }] = await Promise.all([
+    import('./ice/stage.js'),
+    Promise.race([fontsLoaded, new Promise((r) => setTimeout(r, 2500))]),
   ]);
-
-  // 3Dの部品は大きいので、本文の表示を待たせないよう後から読み込む
-  const { IceStage } = await import('./ice/stage.js');
   let stage;
   try { stage = new IceStage(document.getElementById('ice'), { lowPower }); } catch { root.classList.remove('has-ice'); return; }
   stage.still = reduced;
@@ -212,6 +211,8 @@ async function initStage() {
   update();
   stage.renderOnce();
   root.classList.add('ice-ready');
+  // 書体が間に合わなかったときは、届いてから背景の文字を描き直す
+  fontsLoaded.then(() => { stage.resize(); const a = active; active = null; if (a) productIndex = -1; update(); });
   window.__stage = stage;
 }
 
