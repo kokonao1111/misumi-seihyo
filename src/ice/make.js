@@ -109,24 +109,30 @@ export function buildMakeRig(stage) {
   const body = new Mesh(new RoundedBoxGeometry(w, h, d, 4, 0.03), bodyMaterial);
   group.add(body);
 
-  // ---- 缶：奥・左右・底の4枚と、上の縁 ----
-  const steel = new ShaderMaterial({
-    uniforms: { uSteel: { value: new Vector3(0.52, 0.58, 0.62) }, uAlpha: { value: 1 } },
-    vertexShader: plainVert, fragmentShader: steelFrag, side: DoubleSide, transparent: true,
-  });
+  // ---- 缶：四方の壁と底、上の縁 ----
+  // 見る人の側を向いた壁は透明にする。どの向きに回しても、中の氷とうしろの字が見える（断面模型の考え方）
+  const steelUniforms = () => ({ uSteel: { value: new Vector3(0.52, 0.58, 0.62) }, uAlpha: { value: 1 } });
+  const steelMaterial = () => new ShaderMaterial({ uniforms: steelUniforms(), vertexShader: plainVert, fragmentShader: steelFrag, side: DoubleSide, transparent: true });
   const can = new Group();
+  const sides = [];   // { normal: 外向きの法線, centre, material, meshes }
   const t = 0.035, gap = 0.035, tall = 0.2;
   const cw = w + gap * 2, cd = d + gap * 2, ch = h + tall;
-  const wall = (gw, gh, gd, x, y, z) => { const m = new Mesh(new BoxGeometry(gw, gh, gd), steel); m.position.set(x, y, z); can.add(m); extras.push(m); };
   const cy = tall / 2;
-  wall(cw + t * 2, ch, t, 0, cy, -cd / 2 - t / 2);            // 奥
-  wall(t, ch, cd, -cw / 2 - t / 2, cy, 0);                     // 左
-  wall(t, ch, cd, cw / 2 + t / 2, cy, 0);                      // 右
-  wall(cw + t * 2, t, cd + t, 0, -h / 2 - t / 2 - 0.005, -t / 2);   // 底
   const rimY = cy + ch / 2;
-  wall(cw + t * 4, t * 1.4, t * 1.6, 0, rimY, -cd / 2 - t / 2);   // 縁（奥）
-  wall(t * 1.6, t * 1.4, cd + t * 2, -cw / 2 - t / 2, rimY, 0);   // 縁（左）
-  wall(t * 1.6, t * 1.4, cd + t * 2, cw / 2 + t / 2, rimY, 0);    // 縁（右）
+  const addSide = (normal, centre, parts) => {
+    const material = steelMaterial();
+    const meshes = parts.map(([gw, gh, gd, x, y, z]) => { const m = new Mesh(new BoxGeometry(gw, gh, gd), material); m.position.set(x, y, z); can.add(m); extras.push(m); return m; });
+    sides.push({ normal: new Vector3(...normal), centre: new Vector3(...centre), material, meshes });
+  };
+  // 壁1枚と、その上の縁をひと組にする
+  addSide([0, 0, -1], [0, cy, -cd / 2], [[cw + t * 2, ch, t, 0, cy, -cd / 2 - t / 2], [cw + t * 4, t * 1.4, t * 1.6, 0, rimY, -cd / 2 - t / 2]]);
+  addSide([0, 0, 1], [0, cy, cd / 2], [[cw + t * 2, ch, t, 0, cy, cd / 2 + t / 2], [cw + t * 4, t * 1.4, t * 1.6, 0, rimY, cd / 2 + t / 2]]);
+  addSide([-1, 0, 0], [-cw / 2, cy, 0], [[t, ch, cd, -cw / 2 - t / 2, cy, 0], [t * 1.6, t * 1.4, cd + t * 2, -cw / 2 - t / 2, rimY, 0]]);
+  addSide([1, 0, 0], [cw / 2, cy, 0], [[t, ch, cd, cw / 2 + t / 2, cy, 0], [t * 1.6, t * 1.4, cd + t * 2, cw / 2 + t / 2, rimY, 0]]);
+  const floorMaterial = steelMaterial();
+  const floor = new Mesh(new BoxGeometry(cw + t * 2, t, cd + t * 2), floorMaterial);
+  floor.position.set(0, -h / 2 - t / 2 - 0.005, 0);
+  can.add(floor); extras.push(floor);
   group.add(can);
 
   // ---- 芯の水 ----
@@ -166,6 +172,7 @@ export function buildMakeRig(stage) {
   group.add(bubbles); extras.push(bubbles);
   const seeds = Array.from({ length: COUNT }, (_, i) => ({ p: (i * 0.618) % 1, s: 0.55 + ((i * 7) % 10) / 14, a: i * 2.4, r: 0.016 + ((i * 3) % 7) * 0.005 }));
   const mat = new Matrix4(), pos = new Vector3(), quat = new Quaternion(), scl = new Vector3();
+  const eye = new Vector3(), toEye = new Vector3();
 
   const state = { fill: 0, tube: 0, air: 0, freeze: 0, core: 1, milk: 0, drop: 0, finish: 0 };
   let clock = 0;
@@ -231,8 +238,23 @@ export function buildMakeRig(stage) {
 
     // 脱缶：缶が下へ抜けていく
     can.position.y = -s.drop * (h + 1.4);
-    steel.uniforms.uAlpha.value = 1 - clamp01((s.drop - 0.55) / 0.45);
+    const fade = 1 - clamp01((s.drop - 0.55) / 0.45);
     can.visible = s.drop < 0.999;
+    floorMaterial.uniforms.uAlpha.value = fade;
+
+    // 見る人の側を向いた壁を透かす
+    group.updateWorldMatrix(true, false);
+    eye.copy(stage.camera.position);
+    group.worldToLocal(eye);
+    for (const side of sides) {
+      toEye.copy(eye).sub(side.centre).setY(0).normalize();
+      const facing = side.normal.dot(toEye);                       // 1=真正面がこちら向き　-1=向こう向き
+      const open = clamp01((facing + 0.12) / 0.3);                  // 向きが変わるところで、なめらかに消える
+      const alpha = fade * (1 - open * open * (3 - 2 * open));
+      side.material.uniforms.uAlpha.value = alpha;
+      const show = alpha > 0.01;
+      side.meshes.forEach((m) => { m.visible = show; });
+    }
   }
 
   return { group, extras, state, update, setState: (next) => Object.assign(state, next) };
