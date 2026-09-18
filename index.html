@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>三澄製氷｜48時間かけて凍らせる、東京・墨田の純氷</title>
+  <meta name="description" content="三澄製氷は昭和9年創業の氷屋です。−10℃で48時間かけてゆっくり凍らせた純氷を、東京のバーと料理店へ毎朝お届けしています。貫目氷・角氷・丸氷・かち割りの製造と配達、工場直売。">
+  <meta name="theme-color" content="#e9eff1">
+  <meta property="og:title" content="三澄製氷｜急ぐと、濁る。">
+  <meta property="og:description" content="−10℃で48時間。東京・墨田の氷屋がつくる純氷。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://kokonao1111.github.io/misumi-seihyo/images/og.jpg">
+  <meta property="og:url" content="https://kokonao1111.github.io/misumi-seihyo/">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- 架空の会社なので、検索結果には載せない -->
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@700;900&display=swap" rel="stylesheet">
+  <script>
+    // 3Dが使えるかを先に判定して、代替表示が一瞬見えてしまうのを防ぐ
+    (function () {
+      var r = document.documentElement; r.classList.add('js');
+      try {
+        if (/[?&]noice\b/.test(location.search)) return;
+        var c = document.createElement('canvas');
+        if (c.getContext('webgl2') || c.getContext('webgl')) r.classList.add('has-ice');
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">本文へ移動</a>
+
+  <canvas id="ice" aria-hidden="true"></canvas>
+
+  <header class="head" id="head">
+    <a class="head__name" href="#top" aria-label="三澄製氷 トップへ">三澄製氷</a>
+    <nav class="head__nav" id="nav" aria-label="主なメニュー">
+      <a href="#junpyo">純氷とは</a>
+      <a href="#seihin">製品</a>
+      <a href="#kojo">工場</a>
+      <a href="#yoru">バーの方へ</a>
+      <a href="#haitatsu">配達と直売</a>
+      <a href="#kaisha">会社概要</a>
+      <a class="head__tel" href="#toiawase">お問い合わせ</a>
+    </nav>
+    <button class="head__menu" id="menu" type="button" aria-expanded="false" aria-controls="nav">
+      <span class="head__menu-bars" aria-hidden="true"></span>
+      <span class="head__menu-text">メニュー</span>
+    </button>
+  </header>
+
+  <main id="main">
+
+    <!-- 冒頭：氷の舞台 -->
+    <section class="stage stage--hero" id="top" data-stage="hero">
+      <div class="stage__pin">
+        <h1 class="hero__copy"><span>急ぐと、</span><span>濁る。</span></h1>
+        <img class="stage__still" src="/images/still-hero.webp" width="900" height="1100" alt="透きとおった貫目氷">
+        <p class="hero__lead">
+          三澄製氷は、−10℃で48時間かけて凍らせた純氷を、<br class="pc">
+          東京のバーと料理店へ毎朝届けています。<br class="pc">
+          昭和9年創業、墨田区の氷屋です。
+        </p>
+        <p class="hero__hint" aria-hidden="true">氷はつかんで回せます</p>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <!-- はじめに＋お知らせ -->
+    <section class="sheet intro" id="hajimeni">
+      <div class="intro__grid">
+        <h2 class="intro__title reveal">氷は、水と時間だけで<br>できています。</h2>
+        <div class="intro__body reveal">
+          <p>材料は水だけ。足すものも、隠すものもありません。だから氷は、つくり方がそのまま見た目に出ます。急いで凍らせれば、逃げ遅れた空気が白い芯になって残る。ゆっくり凍らせれば、向こう側の文字が読めるほど澄む。</p>
+          <p>私たちは92年間、同じ缶、同じ温度、同じ48時間で氷をつくってきました。早くつくる方法はいくつもありますが、どれも少しだけ濁ります。その「少し」を、グラスを持つ人は見ています。</p>
+        </div>
+        <figure class="intro__photo reveal">
+          <img src="/images/kakugori.webp" srcset="/images/kakugori-800.webp 800w, /images/kakugori.webp 1600w" sizes="(min-width: 900px) 50vw, 100vw" width="1600" height="1600" loading="lazy" alt="向こうが透けて見える、角の立った角氷">
+          <figcaption>5cm角の角氷。氷柱から切り出し、角を立てたまま届けます。</figcaption>
+        </figure>
+      </div>
+
+      <div class="news reveal">
+        <h2 class="news__title">お知らせ</h2>
+        <ul class="news__list">
+          <li><time datetime="2026-09-01">2026年9月1日</time><a href="#haitatsu">かき氷用の氷は、今季9月30日の出荷分で終わります。</a></li>
+          <li><time datetime="2026-08-18">2026年8月18日</time><a href="#haitatsu">9月から、直売所の土曜の営業を正午までに戻します。</a></li>
+          <li><time datetime="2026-07-01">2026年7月1日</time><a href="#seihin">丸氷を、直径6.5cmと7cmの2種類にしました。</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 純氷とは：濁りの比較 -->
+    <section class="stage stage--clarity" id="junpyo" data-stage="clarity">
+      <div class="stage__pin">
+        <div class="clarity__head">
+          <h2 class="label">純氷とは</h2>
+          <p class="clarity__ask">同じ水でも、<br>凍らせる時間で<br>ここまで変わります。</p>
+        </div>
+        <div class="clarity__meter" aria-live="off">
+          <p class="clarity__caption">凍らせた時間</p>
+          <p class="clarity__hours"><span id="hours">3</span><small>時間</small></p>
+          <div class="clarity__bar" aria-hidden="true"><i id="hoursBar"></i></div>
+          <p class="clarity__note" id="clarityNote">家庭の冷凍庫の氷。外側から一気に凍り、空気と不純物が中心に閉じ込められて白く濁ります。</p>
+        </div>
+        <div class="stage__stills">
+          <figure><img src="/images/still-cloudy.webp" width="900" height="1100" loading="lazy" alt="中心が白く濁った氷"><figcaption>3時間で凍らせた氷</figcaption></figure>
+          <figure><img src="/images/still-clear.webp" width="900" height="1100" loading="lazy" alt="向こうが透けて見える純氷"><figcaption>48時間かけた純氷</figcaption></figure>
+        </div>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <!-- なぜ澄むのか -->
+    <section class="sheet why" id="naze">
+      <h2 class="why__title reveal">澄む理由は、<br>3つの数字です。</h2>
+      <div class="why__item why__item--a reveal">
+        <p class="figure"><span>−10</span><small>℃</small></p>
+        <h3>冷やしすぎない。</h3>
+        <p>家庭の冷凍庫は−18℃。氷は外側から一気に固まり、空気の逃げ場がなくなります。三澄の製氷槽は−10℃前後。氷が内側へ向かって、1時間に数ミリずつ育つ温度です。</p>
+      </div>
+      <div class="why__item why__item--b reveal">
+        <p class="figure"><span>48</span><small>時間</small></p>
+        <h3>水を止めない。</h3>
+        <p>凍らせている間じゅう、缶の底から空気を送って水を動かします。動いている水は、空気や不純物を抱えたままでは凍れません。純粋な水だけが先に氷になり、残りは中心へ追いやられます。最後に残った芯の水は、抜いて新しい水と入れ替えます。</p>
+      </div>
+      <div class="why__item why__item--c reveal">
+        <p class="figure"><span>135</span><small>kg</small></p>
+        <h3>大きくつくって、切り出す。</h3>
+        <p>1本の氷柱は135kg、昔の単位で36貫。大きな塊でゆっくり凍らせた氷は結晶が大きく、硬く、溶けにくくなります。角氷も丸氷も、この氷柱から切り出します。</p>
+      </div>
+      <figure class="why__photo why__photo--c reveal">
+        <img src="/images/kiriwake.webp" width="1200" height="1500" loading="lazy" alt="氷柱を36個の貫目氷に切り分けた図">
+        <figcaption>氷柱1本の切り分け。横2 × 奥2 × 縦9で、36貫。</figcaption>
+      </figure>
+    </section>
+
+    <!-- 製品：形の切り替え -->
+    <section class="stage stage--products" id="seihin" data-stage="products">
+      <div class="stage__pin">
+        <h2 class="label products__label">製品</h2>
+        <div class="products__tabs" role="tablist" aria-label="製品の種類">
+          <button role="tab" type="button" aria-selected="true" data-product="0">貫目氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="1">角氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="2">丸氷</button>
+          <button role="tab" type="button" aria-selected="false" data-product="3">かち割り</button>
+        </div>
+        <div class="products__panels">
+          <article class="product is-on" data-panel="0">
+            <img class="product__still" src="/images/still-block.webp" width="900" height="1100" loading="lazy" alt="貫目氷">
+            <h3>貫目氷<small>かんめごおり</small></h3>
+            <p>氷柱を1貫（3.75kg）ごとに切り分けた、いちばん素のかたち。お店で好きな大きさに割って使う方、氷彫刻、かき氷に。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>約 28 × 13 × 12 cm</dd></div>
+              <div><dt>重さ</dt><dd>1貫 3.75kg（半貫もあります）</dd></div>
+              <div><dt>価格</dt><dd>1貫 650円</dd></div>
+            </dl>
+          </article>
+          <article class="product" data-panel="1">
+            <img class="product__still" src="/images/still-cubes.webp" width="900" height="1100" loading="lazy" alt="角氷">
+            <h3>角氷<small>かくごおり</small></h3>
+            <p>ロックにもハイボールにも使える立方体。機械でつくる氷と違って角が立っているので、グラスの中でゆっくり丸くなります。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>4cm角 ／ 5cm角 ／ 6cm角</dd></div>
+              <div><dt>入数</dt><dd>3kg袋（5cm角で約26個）</dd></div>
+              <div><dt>価格</dt><dd>3kg 980円</dd></div>
+            </dl>
+          </article>
+          <article class="product" data-panel="2">
+            <img class="product__still" src="/images/still-ball.webp" width="900" height="1100" loading="lazy" alt="丸氷">
+            <h3>丸氷<small>まるごおり</small></h3>
+            <p>同じ重さなら、球は表面積がいちばん小さい形です。つまり、いちばん溶けにくい。1個ずつ削り出し、ひびと曇りを見てから箱に詰めます。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>直径 6.5cm ／ 7cm</dd></div>
+              <div><dt>入数</dt><dd>12個入り</dd></div>
+              <div><dt>価格</dt><dd>6.5cm 2,600円 ／ 7cm 2,900円</dd></div>
+            </dl>
+          </article>
+          <article class="product" data-panel="3">
+            <img class="product__still" src="/images/still-crushed.webp" width="900" height="1100" loading="lazy" alt="かち割り">
+            <h3>かち割り<small>かちわり</small></h3>
+            <p>貫目氷を手で割った、不ぞろいの氷。水割り、アイスペール、魚の冷やし込みに。ご家庭用に1kgの小袋もあります。</p>
+            <dl>
+              <div><dt>寸法</dt><dd>3〜5cm（不ぞろい）</dd></div>
+              <div><dt>入数</dt><dd>1kg袋 ／ 3kg袋</dd></div>
+              <div><dt>価格</dt><dd>1kg 320円 ／ 3kg 850円</dd></div>
+            </dl>
+          </article>
+        </div>
+        <p class="products__tax">価格はすべて税込、工場直売と配達で共通です。</p>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <!-- 工場：製氷日誌 -->
+    <section class="sheet factory" id="kojo">
+      <div class="factory__head">
+        <h2 class="reveal">1本の氷柱が<br>できるまで。</h2>
+        <p class="reveal">工場では、缶ごとに日誌をつけています。下は、ある1本の記録です。書いてあることは、92年前とほとんど変わりません。</p>
+      </div>
+
+      <div class="log reveal" role="region" aria-label="製氷日誌" tabindex="0">
+        <table>
+          <caption>製氷日誌<span>缶番号 14 ／ 令和8年9月</span></caption>
+          <thead>
+            <tr><th scope="col">日</th><th scope="col">時刻</th><th scope="col">作業</th><th scope="col">記録</th><th scope="col">担当</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>7日</td><td>5:30</td><th scope="row">注水</th><td>ろ過した水を缶へ。水温16℃。槽の温度−10.2℃。</td><td><i>三澄</i></td></tr>
+            <tr><td>7日</td><td>5:40</td><th scope="row">送気はじめ</th><td>缶の底へ管を下ろし、空気を送る。以後、止めない。</td><td><i>三澄</i></td></tr>
+            <tr><td>8日</td><td>14:00</td><th scope="row">芯水の入れ替え</th><td>氷の厚み、壁から9cm。中心に残った水を抜き、新しい水に替える。</td><td><i>小池</i></td></tr>
+            <tr><td>9日</td><td>5:30</td><th scope="row">脱缶</th><td>48時間。缶をぬるま湯にくぐらせ、氷柱を抜く。135kg。</td><td><i>小池</i></td></tr>
+            <tr><td>9日</td><td>6:00</td><th scope="row">検品</th><td>光に透かして芯とひびを見る。良。貯氷庫へ。</td><td><i>三澄</i></td></tr>
+            <tr><td>10日</td><td>4:00</td><th scope="row">切り出し・出荷</th><td>1日寝かせて締まった氷を切り分ける。貫目36、うち8を丸氷へ。</td><td><i>早川</i></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="factory__aside reveal">検品で合わなかった氷は、砕いて魚屋さんの冷やし込み用に回します。<br class="pc">捨てる氷はありません。</p>
+    </section>
+
+    <!-- 夜：バーの方へ -->
+    <section class="stage stage--night" id="yoru" data-stage="night">
+      <div class="stage__pin">
+        <h2 class="night__copy"><span>薄め</span><span>ない。</span></h2>
+        <img class="stage__still" src="/images/still-night.webp" width="900" height="1100" loading="lazy" alt="暗がりで縁だけが光る丸氷">
+        <p class="night__lead">バーの方へ。<br>純氷は結晶が大きく、硬く締まっています。<br class="pc">溶けるのが遅いので、1杯を飲み終えるまで、酒の味を変えません。</p>
+        <div class="stage__grab" data-grab></div>
+      </div>
+    </section>
+
+    <section class="sheet night" id="yoru-hanashi">
+      <div class="night__grid">
+        <figure class="night__photo night__photo--a reveal">
+          <img src="/images/rock.webp" srcset="/images/rock-800.webp 800w, /images/rock.webp 1400w" sizes="(min-width: 900px) 33vw, 72vw" width="1400" height="2100" loading="lazy" alt="暗がりのカウンターに置かれた、氷入りのウイスキー">
+        </figure>
+        <div class="night__text reveal">
+          <h3>お取引先は、都内で約210軒。</h3>
+          <p>銀座、新橋、浅草、上野、錦糸町。毎朝5時に工場を出て、開店前のお店の冷凍庫へ直接お納めします。鍵をお預かりしているお店が、半分ほどあります。</p>
+          <p>はじめての方には、貫目氷・角氷・丸氷をひとそろい、試しにお持ちします。ご自分のグラスと酒で確かめてから決めてください。</p>
+          <a class="btn btn--light" href="#toiawase"><span>試しの氷を頼む</span></a>
+        </div>
+        <blockquote class="voice voice--a reveal">
+          <p>注いだ瞬間に、氷が消えるんです。グラスの中に何もないみたいに見える。お客さんが最初に驚くのはそこです。</p>
+          <footer>銀座7丁目・バー店主（お取引14年）</footer>
+        </blockquote>
+        <figure class="night__photo night__photo--b reveal">
+          <img src="/images/sosogu.webp" srcset="/images/sosogu-800.webp 800w, /images/sosogu.webp 1600w" sizes="(min-width: 900px) 50vw, 100vw" width="1600" height="1067" loading="lazy" alt="大きな角氷を入れたグラスに、琥珀色の酒を注ぐ">
+        </figure>
+        <blockquote class="voice voice--b reveal">
+          <p>自分で削る店なので、貫目で取っています。三澄さんの氷は刃が素直に入る。割れ方でわかります。</p>
+          <footer>浅草・バーテンダー（お取引6年）</footer>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- 配達と直売 -->
+    <section class="sheet delivery" id="haitatsu">
+      <h2 class="reveal">配達と直売</h2>
+      <div class="delivery__grid">
+        <div class="delivery__col reveal">
+          <h3>お店へ配達します</h3>
+          <table class="plain">
+            <tr><th scope="row">配達日</th><td>月曜〜土曜（日曜・元日休み）</td></tr>
+            <tr><th scope="row">時間</th><td>5:00〜11:00 のあいだ</td></tr>
+            <tr><th scope="row">地域</th><td>墨田・台東・中央・千代田・港・江東・荒川の各区<br><small>ほかの地域は、お電話でご相談ください。</small></td></tr>
+            <tr><th scope="row">ご注文</th><td>前日の15時まで。電話、ファクス、LINE</td></tr>
+            <tr><th scope="row">配達料</th><td>1回 3,000円以上のご注文で無料</td></tr>
+          </table>
+        </div>
+        <div class="delivery__col delivery__bin reveal">
+          <h3>毎朝の便</h3>
+          <table class="bin">
+            <thead><tr><th scope="col">便</th><th scope="col">工場発</th><th scope="col">まわる地域</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">1便</th><td>5:00</td><td>銀座・新橋・日本橋</td></tr>
+              <tr><th scope="row">2便</th><td>5:20</td><td>浅草・上野・湯島</td></tr>
+              <tr><th scope="row">3便</th><td>6:40</td><td>錦糸町・両国・門前仲町</td></tr>
+              <tr><th scope="row">4便</th><td>8:30</td><td>神田・赤坂・六本木</td></tr>
+            </tbody>
+          </table>
+          <p class="delivery__note">夏の土曜だけ、かき氷屋さん向けに13時発の臨時便を出します。</p>
+        </div>
+        <div class="delivery__col reveal">
+          <h3>工場で直接買えます</h3>
+          <table class="plain">
+            <tr><th scope="row">営業</th><td>月曜〜金曜 8:00〜15:00<br>土曜 8:00〜12:00</td></tr>
+            <tr><th scope="row">場所</th><td>工場の正面、青いのれんの小窓</td></tr>
+            <tr><th scope="row">持ち帰り</th><td>保冷袋をお持ちください。発泡箱は1個200円でお分けします。</td></tr>
+          </table>
+          <p class="delivery__note">1kgのかち割りから買えます。お祭りや運動会など、まとまった量は3日前までにご予約ください。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 会社概要 -->
+    <section class="sheet company" id="kaisha">
+      <div class="company__greet">
+        <div class="reveal">
+          <h2>ごあいさつ</h2>
+          <p class="company__lead">速くも安くもつくれません。<br>濁らせないことだけは、約束できます。</p>
+          <p>祖父の代には、この町に氷屋が11軒ありました。冷蔵庫が家庭に入って、氷を買う人はいなくなり、今は区内でうち1軒です。</p>
+          <p>それでも続けてこられたのは、「澄んだ氷でなければ困る」と言ってくださるお店があったからです。氷は、グラスの中でいちばん目立ってはいけないものだと思っています。これからも、見えない氷をつくります。</p>
+          <p class="company__sign">四代目　三澄 冬樹</p>
+        </div>
+      </div>
+
+      <div class="company__tables">
+        <div class="reveal">
+          <h2>会社概要</h2>
+          <table class="plain">
+            <tr><th scope="row">社名</th><td>三澄製氷株式会社</td></tr>
+            <tr><th scope="row">創業</th><td>昭和9年（1934年）</td></tr>
+            <tr><th scope="row">代表</th><td>代表取締役　三澄 冬樹</td></tr>
+            <tr><th scope="row">所在地</th><td>〒131-0000 東京都墨田区東向島7丁目48番10号</td></tr>
+            <tr><th scope="row">従業員</th><td>14名</td></tr>
+            <tr><th scope="row">設備</th><td>アイス缶 120本、貯氷庫 2室、保冷車 4台</td></tr>
+            <tr><th scope="row">製氷量</th><td>1日 約8トン</td></tr>
+            <tr><th scope="row">事業</th><td>純氷の製造・卸・小売、ドライアイスの販売</td></tr>
+          </table>
+        </div>
+        <div class="reveal">
+          <h2>あゆみ</h2>
+          <table class="plain plain--history">
+            <tr><th scope="row">昭和9年</th><td>初代・三澄 清吉が向島で氷の小売をはじめる</td></tr>
+            <tr><th scope="row">昭和27年</th><td>製氷槽を据え、自社での製氷を開始</td></tr>
+            <tr><th scope="row">昭和48年</th><td>家庭向けの配達をやめ、飲食店向けに絞る</td></tr>
+            <tr><th scope="row">平成11年</th><td>丸氷の削り出しをはじめる</td></tr>
+            <tr><th scope="row">平成30年</th><td>四代目が継ぐ。貯氷庫を建て替え</td></tr>
+            <tr><th scope="row">令和6年</th><td>創業90年</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- お問い合わせ -->
+    <section class="sheet contact" id="toiawase">
+      <div class="contact__head reveal">
+        <h2>お問い合わせ</h2>
+        <p>ご注文、試しの氷、見学のご相談はこちらから。お急ぎの方はお電話がいちばん早いです。</p>
+        <p class="contact__tel"><a href="tel:0300004848">03-0000-4848</a><small>月曜〜土曜 4:00〜15:00</small></p>
+      </div>
+      <form class="form reveal" id="form" novalidate>
+        <div class="form__row">
+          <label for="f-name">お名前</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="form__row">
+          <label for="f-shop">お店の名前<small>個人の方は空欄で</small></label>
+          <input id="f-shop" name="shop" type="text" autocomplete="organization">
+        </div>
+        <div class="form__row">
+          <label for="f-tel">電話番号</label>
+          <input id="f-tel" name="tel" type="tel" autocomplete="tel" inputmode="tel" required>
+        </div>
+        <fieldset class="form__row form__row--radio">
+          <legend>ご用件</legend>
+          <label><input type="radio" name="kind" value="試しの氷" checked><span>試しの氷を頼みたい</span></label>
+          <label><input type="radio" name="kind" value="注文"><span>注文・見積もり</span></label>
+          <label><input type="radio" name="kind" value="見学"><span>工場見学</span></label>
+          <label><input type="radio" name="kind" value="その他"><span>その他</span></label>
+        </fieldset>
+        <div class="form__row">
+          <label for="f-body">内容</label>
+          <textarea id="f-body" name="body" rows="5"></textarea>
+        </div>
+        <button class="btn" type="submit"><span>送信する</span></button>
+        <p class="form__done" id="formDone" role="status" hidden>ありがとうございます。1営業日以内に、お電話で折り返します。</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="melt" aria-live="off">
+      <p class="melt__line">このページを開いてから <b id="meltTime">0秒</b>。</p>
+      <p class="melt__line">グラスに入れた三澄の丸氷は、まだ <b id="meltPct">0.0%</b> しか溶けていません。</p>
+      <p class="melt__small" id="meltHome">家庭の氷なら、そろそろ角が取れはじめる頃です。</p>
+    </div>
+    <div class="foot__bottom">
+      <p class="foot__name">三澄製氷株式会社</p>
+      <p class="foot__addr">〒131-0000 東京都墨田区東向島7丁目48番10号<br>電話 03-0000-4848　ファクス 03-0000-4849</p>
+      <nav class="foot__nav" aria-label="フッターメニュー">
+        <a href="#junpyo">純氷とは</a><a href="#seihin">製品</a><a href="#kojo">工場</a><a href="#yoru">バーの方へ</a><a href="#haitatsu">配達と直売</a><a href="#kaisha">会社概要</a><a href="#toiawase">お問い合わせ</a>
+      </nav>
+      <p class="foot__copy">© 三澄製氷株式会社</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
