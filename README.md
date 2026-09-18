@@ -56,6 +56,7 @@ npm run preview  # 書き出したものを確認する
 2. `vite.config.js` の `PAGES` に足します。
 3. `src/partials/header.html` と `footer.html` にリンクを足します。
 4. `npm run build` のあと `node scripts/check-links.mjs` で、リンク切れがないか確かめます。
+5. `npm run preview` を起動して `node scripts/audit-mobile.mjs http://localhost:4173 <出力フォルダ> 390 664` で、スマホ幅の点検をします。横はみ出し、3Dの場面の中での文章の重なり、メニューが全画面で開くかを調べ、各場面の画面を1枚にまとめて書き出します。背の低い画面（390×664、360×640）でも確かめてください。
 
 ## 3Dの切り替え
 

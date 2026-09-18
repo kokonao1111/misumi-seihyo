@@ -22,15 +22,69 @@ const scrollToY = (y) => (lenis ? lenis.scrollTo(y, { duration: 1.2 }) : window.
 const MINCHO = '"Zen Old Mincho", "Hiragino Mincho ProN", serif';
 const font = (size) => `900 ${size}px ${MINCHO}`;
 
+// ---- 縦長の画面での置き方 ----
+// 文章の大きさは端末で変わらないのに、画面の高さは端末やブラウザのバーで大きく変わる。
+// 割合で置くと、背の低い画面で氷と文章が重なる。そこで、場面の中の文章の位置を実際に測り、
+// 上の文章と下の文章のあいだの「空いている帯」に、大きな字と氷を収める。
+let band = { top: 72, bottom: 600 };   // いまの場面の帯（画面の上からのピクセル）
+const SHAPE_BOX = {   // 氷の形ごとの、高さの割合（舞台の scale=1 のとき画面の高さに対して）と、幅÷高さ
+  block: [0.885, 0.66], kanme: [0.885, 0.47], column: [0.92, 0.72], make: [1.0, 0.58], cubes: [0.76, 1.0], ball: [0.83, 1.0], crushed: [0.85, 1.15],
+};
+// 字と氷の割り振り。字を上に、氷をその下に置き、氷の頭が字の足もとに少しだけ重なる。
+// 氷は大きくしすぎない（画面の高さの46%まで、幅の62%まで）。余った高さは上下に分け、やや上に寄せる。
+//   two=2行の見出し（1行目は上、2行目は氷の真うしろ）　one=1語
+let plan = { size: 80, line1: 150, centre: 150, iceTop: 200, iceH: 240 };
+function narrowPlan(kind, glyphs, w, H, ratio) {
+  const bandH = Math.max(160, band.bottom - band.top);
+  if (kind === 'two') {
+    const size = Math.min(w * 0.235, bandH * 0.2);
+    // 丸氷はレンズでうしろの字を逆さにするので、2行目の両端が氷の外に残るよう小さめにする
+    const iceH = Math.max(80, Math.min(H * 0.46, (w * (ratio >= 1 ? 0.4 : 0.5)) / ratio, bandH - size * 1.15));
+    const off = Math.max(0, (bandH - (size * 1.08 + iceH)) * 0.4);
+    return { size, line1: band.top + off + size * 0.95, iceTop: band.top + off + size * 1.08, iceH };
+  }
+  if (kind === 'behind') {
+    // 字を氷の真うしろに置く（「氷ごしに字が読める」ことを見せる場面）
+    const iceH = Math.max(80, Math.min(H * 0.46, (w * 0.62) / ratio, bandH - 12));
+    const off = Math.max(0, (bandH - iceH) * 0.45);
+    const size = Math.min((w * 0.9) / glyphs, iceH * 0.6);
+    return { size, centre: band.top + off + iceH / 2, iceTop: band.top + off, iceH };
+  }
+  const size = Math.min((w * 0.9) / glyphs, bandH * 0.24);
+  const iceH = Math.max(80, Math.min(H * 0.46, (w * 0.62) / ratio, bandH - size * 0.9));
+  const off = Math.max(0, (bandH - (size * 0.84 + iceH)) * 0.4);
+  return { size, centre: band.top + off + size * 0.5, iceTop: band.top + off + size * 0.84, iceH };
+}
+function measureBand(sectionEl) {
+  const pin = sectionEl.querySelector('.stage__pin');
+  const pr = pin.getBoundingClientRect();
+  let top = 64, bottom = pr.height;
+  for (const el of pin.children) {
+    if (el.matches('.stage__grab, .stage__still, .stage__stills, .hero__copy, .night__copy, .title__copy')) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) continue;
+    const t = r.top - pr.top, b = r.bottom - pr.top;
+    if ((t + b) / 2 < pr.height / 2) top = Math.max(top, b + 6); else bottom = Math.min(bottom, t - 6);
+  }
+  return { top, bottom };
+}
+// 帯の中での氷の置き場所（舞台の座標に直す）。決めた割り振りは plan に残し、うしろの字を描くときに使う
+function narrowLayout(cfg, shape, stage, x = 0) {
+  const [hk, ratio] = SHAPE_BOX[shape] || SHAPE_BOX.block;
+  const H = stage.cssH || innerHeight;
+  plan = narrowPlan(cfg.plan || 'one', cfg.glyphs || 2, innerWidth, innerHeight, ratio);
+  const centre = plan.iceTop + plan.iceH / 2;
+  return { x, y: 1 - (2 * centre) / H, scale: plan.iceH / (hk * H) };
+}
+
 // 2行の大見出し（冒頭と夜で共通の組み方）
 function twoLines(a, b) {
   return (ctx, w, h) => {
     if (isNarrow()) {
       // スマホ：1行目は上に、2行目は氷の真うしろに置いて、両端の字が氷からはみ出すようにする
-      const size = Math.min(w * 0.235, h * 0.16);
-      ctx.font = font(size);
-      ctx.fillText(a, w * 0.05, h * 0.27);
-      ctx.fillText(b, (w - ctx.measureText(b).width) / 2 + size * 0.12, h * 0.5 + size * 0.36);
+      ctx.font = font(plan.size);
+      ctx.fillText(a, w * 0.05, plan.line1);
+      ctx.fillText(b, (w - ctx.measureText(b).width) / 2 + plan.size * 0.12, plan.iceTop + plan.iceH / 2 + plan.size * 0.36);
       return;
     }
     const size = Math.min(w * 0.19, h * 0.35);
@@ -45,9 +99,8 @@ function oneWord(word, place) {
   return (ctx, w, h) => {
     const n = [...word].length;
     if (isNarrow()) {
-      const size = Math.min((w * 0.9) / n, h * place.mh);
-      ctx.font = font(size);
-      ctx.fillText(word, (w - ctx.measureText(word).width) / 2, h * place.my + size * 0.36);
+      ctx.font = font(plan.size);
+      ctx.fillText(word, (w - ctx.measureText(word).width) / 2, plan.centre + plan.size * 0.36);
       return;
     }
     const size = Math.min((w * place.span) / n, h * place.dh);
@@ -64,52 +117,52 @@ const PRODUCTS = [
   { shape: 'ball', name: '丸氷' },
   { shape: 'crushed', name: 'かち割り' },
 ];
-const productText = (i) => oneWord(PRODUCTS[i].name, { span: 0.6, dh: 0.4, right: 0.965, mh: 0.17, my: 0.31 });
+const productText = (i) => oneWord(PRODUCTS[i].name, { span: 0.6, dh: 0.4, right: 0.965, glyphs: 4 });
 
 const STAGES = {
   hero: {
-    palette: 'day', shape: 'block', cloud: 0,
+    palette: 'day', shape: 'block', cloud: 0, plan: 'two',
     text: twoLines('急ぐと、', '濁る。'),
     layout: () => (isNarrow() ? { x: 0, y: -0.02, scale: fit(0.36) } : { x: 0.24, y: 0.0, scale: 0.62 }),
   },
   // トップの章：左に文章、右に氷と大きな字
   intro: {
-    palette: 'day', shape: 'block', cloud: 0,
+    palette: 'day', shape: 'block', cloud: 0, glyphs: 4,
     text: oneWord('水と時間', { span: 0.56, dh: 0.4, right: 0.965, cy: 0.46, mh: 0.17, my: 0.27 }),
     layout: () => (isNarrow() ? { x: 0, y: 0.24, scale: fit(0.3) } : { x: 0.34, y: 0.02, scale: 0.56 }),
   },
   make: {
-    palette: 'day', shape: 'make', cloud: 0,
+    palette: 'day', shape: 'make', cloud: 0, glyphs: 2,
     text: null,
     layout: () => (isNarrow() ? { x: 0, y: 0.2, scale: fit(0.27) } : { x: 0.36, y: -0.02, scale: 0.54 }),
   },
   cut: {
-    palette: 'day', shape: 'column', cloud: 0, refr: 0.2,
+    palette: 'day', shape: 'column', cloud: 0, refr: 0.2, glyphs: 3,
     text: oneWord('36貫', { span: 0.52, dh: 0.46, right: 0.965, cy: 0.48, mh: 0.2, my: 0.27 }),
     layout: () => (isNarrow() ? { x: 0, y: 0.24, scale: fit(0.26) } : { x: 0.36, y: 0, scale: 0.54 }),
   },
   clarity: {
-    palette: 'day', shape: 'block', cloud: 1, refr: 0.1,
+    palette: 'day', shape: 'block', cloud: 1, refr: 0.1, glyphs: 2, plan: 'behind',
     text: oneWord('澄む', { span: 0.54, dh: 0.6, cx: 0.66, mh: 0.3, my: 0.47 }),
     layout: () => (isNarrow() ? { x: 0, y: 0.06, scale: fit(0.36) } : { x: 0.3, y: 0, scale: 0.6 }),
   },
   products: {
-    palette: 'day', shape: null, cloud: 0,
+    palette: 'day', shape: null, cloud: 0, glyphs: 4,
     text: null,
     layout: () => (isNarrow() ? { x: 0, y: 0.3, scale: fit(0.29) } : { x: 0.36, y: 0, scale: 0.5 }),
   },
   haitatsu: {
-    palette: 'day', shape: 'cubes', cloud: 0,
+    palette: 'day', shape: 'cubes', cloud: 0, glyphs: 3,
     text: oneWord('毎朝。', { span: 0.8, dh: 0.5, cx: 0.5, mh: 0.2, my: 0.4 }),
     layout: () => (isNarrow() ? { x: 0, y: 0.02, scale: fit(0.3) } : { x: 0.3, y: -0.02, scale: 0.5 }),
   },
   kaisha: {
-    palette: 'day', shape: 'kanme', cloud: 0,
+    palette: 'day', shape: 'kanme', cloud: 0, glyphs: 4,
     text: oneWord('92年。', { span: 0.8, dh: 0.5, cx: 0.5, mh: 0.2, my: 0.4 }),
     layout: () => (isNarrow() ? { x: 0, y: 0.0, scale: fit(0.36) } : { x: 0.28, y: 0, scale: 0.6 }),
   },
   night: {
-    palette: 'night', shape: 'ball', cloud: 0, refr: 0.5,
+    palette: 'night', shape: 'ball', cloud: 0, refr: 0.5, plan: 'two',
     text: twoLines('薄め', 'ない。'),
     layout: () => (isNarrow() ? { x: 0, y: -0.17, scale: fit(0.27) } : { x: 0.14, y: -0.14, scale: 0.56 }),
   },
@@ -202,9 +255,16 @@ async function initStage() {
   let productIndex = -1;
   let noteIndex = -1;
 
+  // 場面の氷の置き場所。横長の画面は決め打ち、縦長の画面は文章を測って決める
+  function layoutOf(s, shape) {
+    if (!isNarrow()) return s.cfg.layout();
+    return narrowLayout(s.cfg, shape || s.cfg.shape || 'block', stage, s.cfg.narrowX || 0);
+  }
+
   function setProduct(i, instant) {
     if (i === productIndex) return;
     productIndex = i;
+    if (isNarrow() && active) stage.setLayout(layoutOf(active, PRODUCTS[i].shape), { instant });
     stage.setShape(PRODUCTS[i].shape, { instant: instant || reduced });
     stage.setText(productText(i), { fade: !(instant || reduced) });
     tabs.forEach((t, k) => t.setAttribute('aria-selected', String(k === i)));
@@ -220,8 +280,9 @@ async function initStage() {
     const c = s.cfg;
     const neighbours = prev && (prev.el.nextElementSibling === s.el || prev.el.previousElementSibling === s.el);
     const animate = !!neighbours && !reduced;
+    if (isNarrow()) { s.band = measureBand(s.el); band = s.band; }
     stage.setPalette(c.palette, animate ? 1.1 : 0);
-    stage.setLayout(c.layout(), { instant: !animate });
+    stage.setLayout(layoutOf(s, s.name === 'products' ? PRODUCTS[Math.min(3, Math.floor(p * 4))].shape : undefined), { instant: !animate });
     stage.setCloud(c.cloud, { instant: !animate });
     stage.setRefraction((c.refr ?? 0.24) * (isNarrow() ? 0.7 : 1));
     if (s.name !== 'cut') stage.setExplode(0.12);
@@ -260,9 +321,9 @@ async function initStage() {
     const p = clamp(-r.top / Math.max(1, r.height - vh));
     if (best !== active) activate(best, p);
 
-    const base = best.cfg.layout();
+    const base = layoutOf(best, best.name === 'products' ? PRODUCTS[Math.max(0, productIndex)].shape : undefined);
     if (best.name === 'hero') {
-      stage.setLayout({ ...base, y: base.y + p * 0.12 });
+      stage.setLayout({ ...base, y: base.y + p * (isNarrow() ? 0.03 : 0.12) });
       stage.scrollTurn = p * 1.1 + (isNarrow() ? 0.34 : 0);   // スマホは正面寄りに向けて、うしろの字を読みやすく
     } else if (best.name === 'clarity') {
       const t = clamp((p - 0.06) / 0.8);
@@ -290,7 +351,7 @@ async function initStage() {
       stage.scrollTurn = p * 1.3;
       if (cutEl) cutEl.textContent = String(Math.max(1, Math.round(1 + 35 * clamp((p - 0.12) / 0.5))));
     } else {
-      stage.setLayout({ ...base, y: base.y + p * 0.08 });
+      stage.setLayout({ ...base, y: base.y + p * (isNarrow() ? 0.02 : 0.08) });
       stage.scrollTurn = p * 0.9 + (best.name === 'kaisha' && isNarrow() ? 0.34 : 0);
     }
 
