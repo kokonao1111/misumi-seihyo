@@ -57,6 +57,9 @@ small { font-size: 0.8125rem; color: var(--shade); }
 .has-ice #ice { display: block; opacity: 0; transition: opacity 1.2s var(--ease); }
 .ice-ready #ice { opacity: 1; }
 
+/* 文字だけの部分に重ねる、壁の光（src/ambient.js） */
+#amb { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100lvh; z-index: 5; pointer-events: none; }
+
 main { position: relative; z-index: 1; }
 .sheet { position: relative; background: var(--white); padding: var(--gap-y) var(--side); }
 
@@ -645,10 +648,10 @@ table.grid .is-ours { background: var(--panel); padding-left: 1.25rem; font-weig
 table.grid thead .is-ours { font-weight: 900; font-size: 1.0625rem; padding-top: 0.9rem; }
 .grid--price td:last-child { font-family: var(--mincho); font-weight: 900; font-size: 1.125rem; white-space: nowrap; text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
 .grid--price thead th:last-child { text-align: right; padding-right: 0; }
-.grid--night thead th { border-bottom-color: var(--white); }
-.grid--night tbody th, .grid--night tbody td { border-bottom-color: #22353f; }
-.grid--night tbody td { color: #c9d6db; }
-.grid--night small { color: var(--amber); }
+table.grid--night thead th { border-bottom-color: var(--white); }
+table.grid--night tbody th, table.grid--night tbody td { border-bottom-color: #22353f; }
+table.grid--night tbody td { color: #c9d6db; }
+table.grid--night small { color: var(--amber); }
 
 .compare h2, .pricelist h2, .custom h2, .area h2, .order h2, .shop h2, .access h2, .recruit h2, .glass h2, .faq h2 { font-size: clamp(1.9rem, 4vw, 3.5rem); margin-bottom: clamp(2.5rem, 5vw, 4rem); }
 .compare, .pricelist, .custom, .area, .order, .shop, .access, .recruit, .faq { padding-top: 0; }

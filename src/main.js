@@ -1,4 +1,5 @@
 import Lenis from 'lenis';
+import { initAmbient } from './ambient.js';
 
 const root = document.documentElement;
 
@@ -460,6 +461,7 @@ function initMelt() {
   setInterval(tick, 1000);
 }
 
+initAmbient({ reduced });
 initReveal();
 initTables();
 initHead();

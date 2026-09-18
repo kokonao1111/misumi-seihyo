@@ -42,6 +42,7 @@ npm run preview  # 書き出したものを確認する
 | `vite.config.js` | 共通部品を差し込む仕組みと、ページの一覧 |
 | `src/style.css` | 見た目 |
 | `src/main.js` | スクロール連動、メニュー、表、フォーム、フッターの溶け時計 |
+| `src/ambient.js` | 文字だけの部分に重ねる、壁の光（光の網と窓明かり） |
 | `src/ice/stage.js` | 氷の3D（形、置き場所、色の切り替え） |
 | `src/ice/shaders.js` | 氷の屈折シェーダー |
 | `src/ice/make.js` | 「1本の氷柱ができるまで」の模型（缶、水、芯、管、泡） |
