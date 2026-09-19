@@ -1,5 +1,6 @@
 import Lenis from 'lenis';
 import { initAmbient } from './ambient.js';
+import { sound } from './sound.js';
 
 const root = document.documentElement;
 
@@ -167,7 +168,7 @@ const STAGES = {
     layout: () => (isNarrow() ? { x: 0, y: 0.0, scale: fit(0.36) } : { x: 0.28, y: 0, scale: 0.6 }),
   },
   night: {
-    palette: 'night', shape: 'ball', cloud: 0, refr: 0.5, plan: 'two',
+    palette: 'night', shape: 'ball', cloud: 0, refr: 0.5, plan: 'two', through: true,   // 前の場面から、氷をくぐり抜けて入る
     text: twoLines('薄め', 'ない。'),
     layout: () => (isNarrow() ? { x: 0, y: -0.17, scale: fit(0.27) } : { x: 0.14, y: -0.14, scale: 0.56 }),
   },
@@ -260,6 +261,7 @@ async function initStage() {
   const cutEl = document.getElementById('cutCount');
   const makeEls = { hours: document.getElementById('makeHours'), when: document.getElementById('makeWhen'), note: document.getElementById('makeNote'), steps: [...document.querySelectorAll('[data-make-step]')] };
   let makeIndex = -1;
+  let cutWas = 0;
   function setMakeStep(i, instant) {
     if (i === makeIndex) return;
     makeIndex = i;
@@ -267,13 +269,19 @@ async function initStage() {
     if (makeEls.when) makeEls.when.textContent = MAKE_STEPS[i].when;
     if (makeEls.note) makeEls.note.textContent = MAKE_STEPS[i].note;
     makeEls.steps.forEach((el, k) => { el.classList.toggle('is-now', k === i); el.classList.toggle('is-done', k < i); });
+    // 段ごとの音：注ぐ、泡、ひび、芯水を注ぐ、缶から抜ける、検品のひと当て
+    sound.bubbling(i >= 1 && i <= 3);
+    if (!instant) [() => sound.pour(1.6), () => {}, () => sound.crack(0.5), () => sound.pour(1.0), () => { sound.thud(); sound.crack(0.9); }, () => sound.clink(0.6)][i]();
   }
   const ayumiEls = { count: document.getElementById('ayumiCount'), west: document.getElementById('ayumiWest'), text: document.getElementById('ayumiText'), steps: [...document.querySelectorAll('[data-ayumi-step]')] };
   let ayumiIndex = -1;
+  let lastIce = -1;
   function setAyumi(i, instant) {
     if (i === ayumiIndex) return;
     ayumiIndex = i;
     const a = AYUMI[i];
+    if (!instant && ayumiIndex >= 0 && a.ice > 0 && a.ice !== lastIce) sound.crack(0.7);
+    lastIce = a.ice;
     stage.setFieldCount(a.ice, { instant: instant || reduced });
     stage.setText(ayumiText(i), { fade: !(instant || reduced) });
     if (ayumiEls.west) ayumiEls.west.textContent = a.west;
@@ -301,6 +309,7 @@ async function initStage() {
     if (isNarrow() && active) stage.setLayout(layoutOf(active, PRODUCTS[i].shape), { instant });
     stage.setShape(PRODUCTS[i].shape, { instant: instant || reduced });
     stage.setText(productText(i), { fade: !(instant || reduced) });
+    if (!instant) sound.crack(0.8);
     tabs.forEach((t, k) => t.setAttribute('aria-selected', String(k === i)));
     panels.forEach((p, k) => p.classList.toggle('is-on', k === i));
   }
@@ -314,8 +323,12 @@ async function initStage() {
     const c = s.cfg;
     const neighbours = prev && (prev.el.nextElementSibling === s.el || prev.el.previousElementSibling === s.el);
     const animate = !!neighbours && !reduced;
+    const passing = animate && (c.through || prev.cfg.through);
+    if (s.name !== 'make') sound.bubbling(false);
+    if (passing) sound.whoosh();
+    if (s.name === 'night') setTimeout(() => sound.clink(1), passing ? 900 : 300);
     if (isNarrow()) { s.band = measureBand(s.el); band = s.band; }
-    stage.setPalette(c.palette, animate ? 1.1 : 0);
+    stage.setPalette(c.palette, passing ? 0.5 : animate ? 1.1 : 0);
     const firstShape = s.name === 'products' ? PRODUCTS[Math.min(3, Math.floor(p * 4))].shape : undefined;
     stage.setLayout(layoutOf(s, firstShape), { instant: !animate });
     stage.setCloud(c.cloud, { instant: !animate });
@@ -323,7 +336,7 @@ async function initStage() {
     if (s.name !== 'cut') stage.setExplode(0.12);
     if (s.name === 'products') {
       productIndex = -1;
-      setProduct(Math.min(3, Math.floor(p * 4)), !animate);
+      setProduct(Math.min(3, Math.floor(p * 4)), !animate || passing);
     } else if (s.name === 'ayumi') {
       ayumiIndex = -1;
       stage.setShape('field', { instant: true });
@@ -339,8 +352,8 @@ async function initStage() {
       stage.setText(c.text, { fade: animate });
     } else {
       // 最初の1回だけは、氷が回りながら現れる
-      stage.setShape(c.shape, { instant: !animate && (shownOnce || reduced) });
-      stage.setText(c.text, { fade: animate });
+      stage.setShape(c.shape, { instant: passing || (!animate && (shownOnce || reduced)) });
+      stage.setText(c.text, { fade: animate && !passing });
     }
     shownOnce = true;
     sections.forEach((x) => x.el.classList.toggle('is-active', x === s));
@@ -389,6 +402,9 @@ async function initStage() {
       // スクロールに合わせて、1本の氷柱に切れ目が入り、36個に分かれていく
       const t = clamp((p - 0.12) / 0.62);
       const e = t * t * (3 - 2 * t);
+      if (e > 0.03 && cutWas <= 0.03) sound.crack(1);
+      if (e > 0.5 && cutWas <= 0.5) sound.crack(0.6);
+      cutWas = e;
       stage.setExplode(e);
       stage.scrollTurn = p * 1.3;
       if (cutEl) cutEl.textContent = String(Math.max(1, Math.round(1 + 35 * clamp((p - 0.12) / 0.5))));
@@ -396,6 +412,14 @@ async function initStage() {
       stage.setLayout({ ...base, y: base.y + p * (isNarrow() ? 0.02 : 0.08) });
       stage.scrollTurn = p * 0.9 + (best.name === 'kaisha' && isNarrow() ? 0.34 : 0);
     }
+
+    // 氷をくぐり抜ける：場面の境目で、スクロールに合わせて氷が画面いっぱいまで近づき、抜けた先が次の場面になる
+    let pass = 0;
+    const nextEl = best.el.nextElementSibling;
+    if (best.cfg.through && best.el.previousElementSibling?.matches('[data-stage]')) pass = 1 - clamp(r.top / vh);
+    else if (nextEl?.matches('[data-stage]') && STAGES[nextEl.dataset.stage]?.through) pass = 1 - clamp(nextEl.getBoundingClientRect().top / vh);
+    const swell = pass > 0 && pass < 1 && !reduced ? Math.sin(Math.PI * pass) ** 2 : 0;
+    stage.setZoom(1 + swell * (lowPower ? 3.2 : 6));
 
     if (reduced) stage.renderOnce(); else stage.start();
   }
@@ -417,6 +441,8 @@ async function initStage() {
     const top = sec.getBoundingClientRect().top + scrollY;
     scrollToY(top + (AYUMI[i].at + 0.02) * (sec.offsetHeight - innerHeight));
   }));
+
+  stage.onRelease = (speed) => { if (speed > 0.015) sound.clink(Math.min(1, 0.35 + speed * 6)); };
 
   document.querySelectorAll('[data-grab]').forEach((z) => z.addEventListener('pointerdown', (e) => stage.grab(e)));
 
@@ -476,6 +502,27 @@ function initHead() {
     paint();
   }, { passive: true });
   paint();
+}
+
+/* ---------- 音の入り切り ---------- */
+function initSound() {
+  const btn = document.getElementById('sound');
+  if (!btn) return;
+  const show = () => { btn.setAttribute('aria-pressed', String(sound.on)); btn.textContent = sound.on ? '音を消す' : '音を出す'; };
+  btn.addEventListener('click', () => { if (sound.on) sound.disable(); else sound.enable(); show(); });
+  // 前に音を出していた人は、最初の操作（クリックやキー）で鳴らせるようにしておく
+  if (sound.wanted()) {
+    // 「音を出す」ボタンそのものを押したときは、ボタンの処理に任せる（二重に切り替わらないように）
+    const arm = (e) => {
+      if (e.target.closest?.('#sound')) return;
+      removeEventListener('pointerdown', arm);
+      removeEventListener('keydown', arm);
+      if (!sound.on) { sound.enable(); show(); }
+    };
+    addEventListener('pointerdown', arm);
+    addEventListener('keydown', arm);
+  }
+  show();
 }
 
 /* ---------- メニュー ---------- */
@@ -627,6 +674,7 @@ function initMelt() {
     if (againEl) againEl.hidden = pct < 100;
   };
   againEl?.addEventListener('click', () => {
+    sound.clink(1);
     t0 = Date.now();
     try { sessionStorage.setItem(KEY, String(t0)); } catch { /* そのまま */ }
     tick();
@@ -647,6 +695,8 @@ initAmbient({ reduced });
 initReveal();
 initTables();
 initHead();
+initSound();
+window.__sound = sound;   // 点検用
 initMenu();
 initNowRun();
 initForm();

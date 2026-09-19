@@ -258,7 +258,7 @@ export class IceStage {
         this.drag.angle += this.drag.vel;
       }
     }, { passive: true });
-    window.addEventListener('pointerup', () => { this.drag.active = false; });
+    window.addEventListener('pointerup', () => { if (this.drag.active) this.onRelease?.(Math.abs(this.drag.vel)); this.drag.active = false; });
     window.addEventListener('pointercancel', () => { this.drag.active = false; });
   }
 
@@ -349,6 +349,9 @@ export class IceStage {
     mesh.count = Math.max(1, Math.min(spots.length, Math.ceil(shown) + 1));
     mesh.instanceMatrix.needsUpdate = true;
   }
+
+  // 氷をくぐり抜けるときの拡大。1=ふつう。スクロールに素早くついていく
+  setZoom(z) { this.zoomTarget = z; }
 
   // 製氷の場面の進み具合（水位、管、泡、凍り具合、芯、脱缶など）
   setMake(state) { this.makeRig.setState(state); }
@@ -452,7 +455,8 @@ export class IceStage {
     const px = this.still ? 0 : this.pointerSmooth.x, py = this.still ? 0 : this.pointerSmooth.y;
     this.shared.uDrift.value.set(px * 0.007, py * 0.006);
     this.pivot.position.set(this.layout.x * visW / 2 + px * 0.07, this.layout.y * visH / 2 + py * 0.04, 0);
-    this.pivot.scale.setScalar(this.layout.scale * visH / 2.6);
+    this.zoom = (this.zoom || 1) + ((this.zoomTarget || 1) - (this.zoom || 1)) * (forceDt === 0 ? 1 : 1 - Math.exp(-dt * 12));
+    this.pivot.scale.setScalar(this.layout.scale * visH / 2.6 * this.zoom);
 
     this.iceUniforms.uCenter.value.set(0.5 + this.layout.x / 2, 0.5 + this.layout.y / 2);
 
