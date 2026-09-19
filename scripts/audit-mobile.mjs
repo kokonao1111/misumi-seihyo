@@ -1,4 +1,4 @@
-// スマホ幅の点検。全ページを上から下までたどり、次を調べる。
+// 画面の点検（スマホ幅が主。PC幅でも、背の低い窓で3Dの場面の文章が重ならないかを調べられる）。全ページを上から下までたどり、次を調べる。
 //   ・横にはみ出している要素
 //   ・3Dの場面の中で、文章どうしが重なっていないか（章ごと、進み具合ごと）
 //   ・メニューを開いたとき、全画面を覆っているか（紙面の上、夜の紙面の上でも）
@@ -8,7 +8,8 @@ import sharp from 'sharp';
 const [base, out, W = 390, H = 664] = process.argv.slice(2);
 const PAGES = ['', 'junpyo/', 'seihin/', 'bar/', 'haitatsu/', 'kaisha/', 'oshirase/', 'toiawase/', 'privacy/'];
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-const ctx = await browser.newContext({ viewport: { width: +W, height: +H }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+const phone = +W < 900;
+const ctx = await browser.newContext({ viewport: { width: +W, height: +H }, deviceScaleFactor: 1, hasTouch: phone, isMobile: phone });
 const problems = [];
 const tiles = [];
 for (const p of PAGES) {
@@ -58,7 +59,7 @@ for (const p of PAGES) {
   }
 
   // メニュー：昼の紙面の上と、フッター（夜）の上で開く
-  for (const where of ['sheet', 'foot']) {
+  for (const where of phone ? ['sheet', 'foot'] : []) {   // PC幅にはメニューのボタンがない
     const y = await page.evaluate((w) => { const el = w === 'foot' ? document.querySelector('.foot') : document.querySelector('main > :not(.stage)'); return el ? Math.min(el.getBoundingClientRect().top + scrollY + 120, document.documentElement.scrollHeight - innerHeight) : null; }, where);
     if (y === null) continue;
     await page.evaluate((yy) => window.scrollTo(0, yy), y);

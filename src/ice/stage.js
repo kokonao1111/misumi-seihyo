@@ -1,5 +1,5 @@
 import {
-  BackSide, CanvasTexture, Color, Group, IcosahedronGeometry, LinearFilter, MathUtils, Mesh, NoColorSpace, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial, SphereGeometry, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer,
+  BackSide, CanvasTexture, Color, Group, IcosahedronGeometry, InstancedMesh, Matrix4, LinearFilter, MathUtils, Mesh, NoColorSpace, PerspectiveCamera, PlaneGeometry, Scene, ShaderMaterial, SphereGeometry, Vector2, Vector3, WebGLRenderTarget, WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -220,6 +220,25 @@ export class IceStage {
     crushed.userData = { half: new Vector3(0.6, 0.45, 0.5), bump: 0.06, tilt: [0.2, 0.2, 0], saw: 0, frost: 0, crack: 1, drops: 0.4 };
     shapes.crushed = crushed;
 
+    // アイス缶の列（会社概要の「あゆみ」）。氷柱の数が、その年のアイス缶の本数を表す。
+    // 並べる順は中心から外へ。何本のときも、まんなかに固まって見える
+    const FIELD = { cols: 12, rows: 10, dx: 0.4, dz: 0.3, w: 0.27, h: 0.5, d: 0.125 };
+    const fieldGeo = roughen(new RoundedBoxGeometry(FIELD.w, FIELD.h, FIELD.d, 3, 0.018), 0.004, 3, 2.1);
+    const fieldMesh = new InstancedMesh(fieldGeo, m, FIELD.cols * FIELD.rows);
+    fieldMesh.frustumCulled = false;
+    const cells = [];
+    for (let r = 0; r < FIELD.rows; r++) for (let c = 0; c < FIELD.cols; c++) {
+      const x = (c - (FIELD.cols - 1) / 2) * FIELD.dx, z = (r - (FIELD.rows - 1) / 2) * FIELD.dz;
+      cells.push({ x, z, rank: Math.max(Math.abs(x) / (FIELD.dx * 4), Math.abs(z) / (FIELD.dz * 2.5)) + Math.hypot(x, z) * 0.01 });
+    }
+    cells.sort((a, b) => a.rank - b.rank);
+    const field = new Group();
+    field.add(fieldMesh);
+    field.userData = { half: new Vector3(FIELD.w / 2, FIELD.h / 2, FIELD.d / 2), bump: 0.04, tilt: [0.62, -0.5, 0], saw: 0.5, frost: 0.9, crack: 0, drops: 0, size: 0.62 };
+    shapes.field = field;
+    this.field = { mesh: fieldMesh, spots: cells, shown: 0, target: 0, h: FIELD.h, m4: new Matrix4() };
+    this.#placeField(0);
+
     // 「1本の氷柱ができるまで」の模型（缶、水、芯、管、泡）
     this.makeRig = buildMakeRig(this);
     this.makeRig.group.userData = { half: new Vector3(0.63, 1.18, 0.29), bump: 0.05, tilt: [0.22, -0.66, 0], saw: 0, frost: 0, crack: 0, drops: 0 };
@@ -311,6 +330,26 @@ export class IceStage {
       piece.rotation.set(0, e * 0.22 * ((cy % 2) ? 1 : -1) * (cx > 0 ? 1 : -1), 0);
     }
   }
+  // アイス缶の本数。増減は、1本ずつ順に立ち上がる／沈む
+  setFieldCount(n, { instant = false } = {}) {
+    this.field.target = n;
+    if (instant) { this.field.shown = n; this.#placeField(n); }
+  }
+
+  #placeField(shown) {
+    const { mesh, spots, m4, h } = this.field;
+    for (let i = 0; i < spots.length; i++) {
+      const t = Math.min(1, Math.max(0, shown - i));
+      const s = t * t * (3 - 2 * t);
+      // 床から生えるように、下端をそろえて伸ばす
+      m4.makeScale(Math.max(1e-4, 0.4 + 0.6 * s) * (s > 0 ? 1 : 1e-4), Math.max(1e-4, s), Math.max(1e-4, 0.4 + 0.6 * s) * (s > 0 ? 1 : 1e-4));
+      m4.setPosition(spots[i].x, -h / 2 + (h * s) / 2, spots[i].z);
+      mesh.setMatrixAt(i, m4);
+    }
+    mesh.count = Math.max(1, Math.min(spots.length, Math.ceil(shown) + 1));
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+
   // 製氷の場面の進み具合（水位、管、泡、凍り具合、芯、脱缶など）
   setMake(state) { this.makeRig.setState(state); }
 
@@ -426,6 +465,14 @@ export class IceStage {
 
     if (!this.still) this.shared.uTime.value += dt;   // 水滴と冷気を動かす
     if (this.current === 'make') this.makeRig.update(this.still ? 0 : dt);
+    if (this.current === 'field' && this.field.shown !== this.field.target) {
+      const f = this.field;
+      const gap = f.target - f.shown;
+      // 本数の差が大きいほど速く。40本でも120本でも、2秒ほどで並びきる
+      const step = (forceDt === 0 ? Math.abs(gap) : Math.max(6, Math.abs(gap) * 1.6) * dt);
+      f.shown = Math.abs(gap) <= step ? f.target : f.shown + Math.sign(gap) * step;
+      this.#placeField(f.shown);
+    }
     this.#watchSpeed(now);
 
     // 1回目：裏面の法線と奥行き　2回目：本番

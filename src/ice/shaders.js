@@ -113,9 +113,15 @@ export const iceVert = /* glsl */ `
   void main() {
     vObj = position;
     vNo = normal;
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    // 同じ氷をたくさん並べるとき（アイス缶の列）は、1つずつの置き場所がここに入る。回転はさせない前提
+    #ifdef USE_INSTANCING
+      mat4 place = instanceMatrix;
+    #else
+      mat4 place = mat4(1.0);
+    #endif
+    vec4 mv = modelViewMatrix * place * vec4(position, 1.0);
     vView = mv.xyz;
-    vCamObj = (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz;
+    vCamObj = (inverse(modelMatrix * place) * vec4(cameraPosition, 1.0)).xyz;
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -125,7 +131,11 @@ export const backVert = /* glsl */ `
   varying vec3 vN;
   varying float vDepth;
   void main() {
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    #ifdef USE_INSTANCING
+      vec4 mv = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+    #else
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    #endif
     vN = normalMatrix * normal;
     vDepth = -mv.z;
     gl_Position = projectionMatrix * mv;

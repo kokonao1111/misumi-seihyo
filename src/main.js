@@ -28,7 +28,7 @@ const font = (size) => `900 ${size}px ${MINCHO}`;
 // 上の文章と下の文章のあいだの「空いている帯」に、大きな字と氷を収める。
 let band = { top: 72, bottom: 600 };   // いまの場面の帯（画面の上からのピクセル）
 const SHAPE_BOX = {   // 氷の形ごとの、高さの割合（舞台の scale=1 のとき画面の高さに対して）と、幅÷高さ
-  block: [0.885, 0.66], kanme: [0.885, 0.47], column: [0.92, 0.72], make: [1.0, 0.58], cubes: [0.76, 1.0], ball: [0.83, 1.0], crushed: [0.85, 1.15],
+  field: [0.5, 2.3], block: [0.885, 0.66], kanme: [0.885, 0.47], column: [0.92, 0.72], make: [1.0, 0.58], cubes: [0.76, 1.0], ball: [0.83, 1.0], crushed: [0.85, 1.15],
 };
 // 字と氷の割り振り。字を上に、氷をその下に置き、氷の頭が字の足もとに少しだけ重なる。
 // 氷は大きくしすぎない（画面の高さの46%まで、幅の62%まで）。余った高さは上下に分け、やや上に寄せる。
@@ -137,9 +137,9 @@ const STAGES = {
     layout: () => (isNarrow() ? { x: 0, y: 0.2, scale: fit(0.27) } : { x: 0.36, y: -0.02, scale: 0.54 }),
   },
   ayumi: {
-    palette: 'day', shape: null, cloud: 0, glyphs: 5,
+    palette: 'day', shape: 'field', cloud: 0, glyphs: 5, refr: 0.18,
     text: null,
-    layout: () => ({ x: 0.36, y: 0, scale: 0.5 }),
+    layout: () => ({ x: 0.3, y: -0.16, scale: 0.72 }),
   },
   cut: {
     palette: 'day', shape: 'column', cloud: 0, refr: 0.2, glyphs: 3,
@@ -212,19 +212,20 @@ function makeState(p) {
 }
 const lerpN = (a, b, t) => a + (b - a) * t;
 
-// 会社概要の「あゆみ」。年代に合わせて、氷の形も変わる
+// 会社概要の「あゆみ」。氷柱の数が、その年のアイス缶の本数を表す（昭和9年は仕入れた氷1つ、焼失の年はゼロ）。
+// at は、スクロールの進み（0〜1）でその年が始まる位置。見た目が変わる年に、長く時間を割く
 const AYUMI = [
-  { era: '昭和9年', west: '1934年', shape: 'kanme', text: '初代・三澄 清吉が、向島で氷の小売をはじめる。リヤカー1台。' },
-  { era: '昭和20年', west: '1945年', shape: 'kanme', text: '空襲で店を焼失。翌年、同じ場所で再開する。' },
-  { era: '昭和27年', west: '1952年', shape: 'column', text: '製氷槽を据え、自社での製氷をはじめる。アイス缶40本。' },
-  { era: '昭和31年', west: '1956年', shape: 'column', text: '株式会社にする。' },
-  { era: '昭和39年', west: '1964年', shape: 'column', text: '東京五輪の年、家庭への配達が最多に。1日600軒。' },
-  { era: '昭和48年', west: '1973年', shape: 'cubes', text: '冷蔵庫が行きわたり、家庭向けの配達をやめる。飲食店向けに絞る。' },
-  { era: '平成11年', west: '1999年', shape: 'ball', text: '丸氷の削り出しをはじめる。' },
-  { era: '平成30年', west: '2018年', shape: 'block', text: '四代目が継ぐ。貯氷庫を建て替え、アイス缶を120本に。' },
-  { era: '令和6年', west: '2024年', shape: 'block', text: '創業90年。' },
+  { at: 0.0, era: '昭和9年', west: '1934年', ice: 1, count: '氷 リヤカー1台', text: '初代・三澄 清吉が、向島で氷の小売をはじめる。氷は仕入れて、1貫ずつ売った。' },
+  { at: 0.13, era: '昭和20年', west: '1945年', ice: 0, count: '氷 なし', text: '空襲で店を焼失。翌年、同じ場所で再開する。' },
+  { at: 0.27, era: '昭和27年', west: '1952年', ice: 40, count: 'アイス缶 40本', text: '製氷槽を据え、自社での製氷をはじめる。' },
+  { at: 0.43, era: '昭和31年', west: '1956年', ice: 40, count: 'アイス缶 40本', text: '株式会社にする。' },
+  { at: 0.5, era: '昭和39年', west: '1964年', ice: 40, count: '配達 1日600軒', text: '東京五輪の年、家庭への配達が最多になる。' },
+  { at: 0.57, era: '昭和48年', west: '1973年', ice: 40, count: 'アイス缶 40本', text: '冷蔵庫が行きわたり、家庭向けの配達をやめる。飲食店向けに絞る。' },
+  { at: 0.64, era: '平成11年', west: '1999年', ice: 40, count: 'アイス缶 40本', text: '丸氷の削り出しをはじめる。' },
+  { at: 0.72, era: '平成30年', west: '2018年', ice: 120, count: 'アイス缶 120本', text: '四代目が継ぐ。貯氷庫を建て替え、アイス缶を3倍にする。' },
+  { at: 0.9, era: '令和6年', west: '2024年', ice: 120, count: 'アイス缶 120本', text: '創業90年。' },
 ];
-const ayumiText = (i) => oneWord(AYUMI[i].era, { span: 0.6, dh: 0.34, right: 0.965, cy: 0.48, glyphs: 5 });
+const ayumiText = (i) => oneWord(AYUMI[i].era, { span: 0.6, dh: 0.34, right: 0.965, cy: 0.3, glyphs: 5 });
 
 const NOTES = [
   [12, '家庭の冷凍庫の氷。外側から一気に凍り、空気と不純物が中心に閉じ込められて白く濁ります。'],
@@ -267,20 +268,20 @@ async function initStage() {
     if (makeEls.note) makeEls.note.textContent = MAKE_STEPS[i].note;
     makeEls.steps.forEach((el, k) => { el.classList.toggle('is-now', k === i); el.classList.toggle('is-done', k < i); });
   }
-  const ayumiEls = { west: document.getElementById('ayumiWest'), text: document.getElementById('ayumiText'), steps: [...document.querySelectorAll('[data-ayumi-step]')] };
+  const ayumiEls = { count: document.getElementById('ayumiCount'), west: document.getElementById('ayumiWest'), text: document.getElementById('ayumiText'), steps: [...document.querySelectorAll('[data-ayumi-step]')] };
   let ayumiIndex = -1;
   function setAyumi(i, instant) {
     if (i === ayumiIndex) return;
     ayumiIndex = i;
     const a = AYUMI[i];
-    if (isNarrow() && active) stage.setLayout(layoutOf(active, a.shape), { instant });
-    stage.setShape(a.shape, { instant: instant || reduced });
+    stage.setFieldCount(a.ice, { instant: instant || reduced });
     stage.setText(ayumiText(i), { fade: !(instant || reduced) });
     if (ayumiEls.west) ayumiEls.west.textContent = a.west;
     if (ayumiEls.text) ayumiEls.text.textContent = a.text;
+    if (ayumiEls.count) ayumiEls.count.textContent = a.count;
     ayumiEls.steps.forEach((el, k) => { el.classList.toggle('is-now', k === i); el.classList.toggle('is-done', k < i); });
   }
-  const ayumiAt = (p) => Math.min(AYUMI.length - 1, Math.floor(p * AYUMI.length));
+  const ayumiAt = (p) => AYUMI.reduce((acc, st, k) => (p >= st.at ? k : acc), 0);
   const makeStepAt = (p) => MAKE_STEPS.reduce((acc, st, k) => (p >= st.at ? k : acc), 0);
   const tabs = [...document.querySelectorAll('[data-product]')];
   const panels = [...document.querySelectorAll('[data-panel]')];
@@ -315,7 +316,7 @@ async function initStage() {
     const animate = !!neighbours && !reduced;
     if (isNarrow()) { s.band = measureBand(s.el); band = s.band; }
     stage.setPalette(c.palette, animate ? 1.1 : 0);
-    const firstShape = s.name === 'products' ? PRODUCTS[Math.min(3, Math.floor(p * 4))].shape : s.name === 'ayumi' ? AYUMI[ayumiAt(p)].shape : undefined;
+    const firstShape = s.name === 'products' ? PRODUCTS[Math.min(3, Math.floor(p * 4))].shape : undefined;
     stage.setLayout(layoutOf(s, firstShape), { instant: !animate });
     stage.setCloud(c.cloud, { instant: !animate });
     stage.setRefraction((c.refr ?? 0.24) * (isNarrow() ? 0.7 : 1));
@@ -325,7 +326,8 @@ async function initStage() {
       setProduct(Math.min(3, Math.floor(p * 4)), !animate);
     } else if (s.name === 'ayumi') {
       ayumiIndex = -1;
-      setAyumi(ayumiAt(p), !animate);
+      stage.setShape('field', { instant: true });
+      setAyumi(ayumiAt(p), true);
     } else if (s.name === 'make') {
       makeIndex = -1;
       stage.setMake(makeState(p).state);
@@ -358,7 +360,7 @@ async function initStage() {
     const p = clamp(-r.top / Math.max(1, r.height - vh));
     if (best !== active) activate(best, p);
 
-    const base = layoutOf(best, best.name === 'products' ? PRODUCTS[Math.max(0, productIndex)].shape : best.name === 'ayumi' ? AYUMI[Math.max(0, ayumiIndex)].shape : undefined);
+    const base = layoutOf(best, best.name === 'products' ? PRODUCTS[Math.max(0, productIndex)].shape : undefined);
     if (best.name === 'hero') {
       stage.setLayout({ ...base, y: base.y + p * (isNarrow() ? 0.03 : 0.12) });
       stage.scrollTurn = p * 1.1 + (isNarrow() ? 0.34 : 0);   // スマホは正面寄りに向けて、うしろの字を読みやすく
@@ -376,7 +378,7 @@ async function initStage() {
       stage.scrollTurn = 0;
     } else if (best.name === 'ayumi') {
       setAyumi(ayumiAt(p));
-      stage.scrollTurn = (p * AYUMI.length - ayumiAt(p)) * 0.5;   // ひとつの年代のあいだ、ゆっくり向きを変える
+      stage.scrollTurn = p * 0.9;   // 92年のあいだに、氷の列をゆっくり見まわす
     } else if (best.name === 'make') {
       const m = makeState(p);
       stage.setMake(m.state);
@@ -413,7 +415,7 @@ async function initStage() {
   ayumiEls.steps.forEach((el, i) => el.addEventListener('click', () => {
     const sec = sections.find((x) => x.name === 'ayumi').el;
     const top = sec.getBoundingClientRect().top + scrollY;
-    scrollToY(top + ((i + 0.5) / AYUMI.length) * (sec.offsetHeight - innerHeight));
+    scrollToY(top + (AYUMI[i].at + 0.02) * (sec.offsetHeight - innerHeight));
   }));
 
   document.querySelectorAll('[data-grab]').forEach((z) => z.addEventListener('pointerdown', (e) => stage.grab(e)));
