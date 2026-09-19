@@ -97,7 +97,7 @@ export class IceStage {
       uText: { value: this.texA }, uTextB: { value: this.texB }, uTextMix: { value: 0 },
       uBack: { value: this.backTarget.texture },
       uBg: { value: c(p.bg) }, uBgEdge: { value: c(p.bgEdge) }, uInk: { value: c(p.ink) },
-      uRes: { value: new Vector2(1, 1) },
+      uRes: { value: new Vector2(1, 1) }, uDrift: { value: new Vector2(0, 0) },
       uShadow: { value: p.shadow }, uCaustic: { value: c(p.caustic) },
       uTime: { value: 0 }, uFog: { value: p.fog }, uFogColor: { value: c(p.fogColor) },
     };
@@ -448,7 +448,10 @@ export class IceStage {
       const u = this.iceUniforms.uCloud;
       u.value += (this.cloudTarget - u.value) * (forceDt === 0 ? 1 : 1 - Math.exp(-dt * 5));
     }
-    this.pivot.position.set(this.layout.x * visW / 2, this.layout.y * visH / 2, 0);
+    // 奥行き：壁の字はポインタと反対へ、氷は同じ向きへ、わずかに動く
+    const px = this.still ? 0 : this.pointerSmooth.x, py = this.still ? 0 : this.pointerSmooth.y;
+    this.shared.uDrift.value.set(px * 0.007, py * 0.006);
+    this.pivot.position.set(this.layout.x * visW / 2 + px * 0.07, this.layout.y * visH / 2 + py * 0.04, 0);
     this.pivot.scale.setScalar(this.layout.scale * visH / 2.6);
 
     this.iceUniforms.uCenter.value.set(0.5 + this.layout.x / 2, 0.5 + this.layout.y / 2);

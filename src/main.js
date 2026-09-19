@@ -439,6 +439,7 @@ async function initStage() {
   update();
   stage.renderOnce();
   root.classList.add('ice-ready');
+  startClearing();
   // 書体が間に合わなかったときは、届いてから背景の文字を描き直す
   fontsLoaded.then(() => { stage.resize(); const a = active; active = null; if (a) productIndex = -1; update(); });
   window.__stage = stage;
@@ -633,6 +634,14 @@ function initMelt() {
   tick();
   setInterval(tick, 1000);
 }
+
+// 曇りガラスが澄みはじめる合図。3Dのあるページは氷の準備ができたとき、ないページや間に合わないときは少し待ってから
+function startClearing() {
+  if (!root.classList.contains('is-frosted') || root.classList.contains('is-clearing')) return;
+  root.classList.add('is-clearing');
+  setTimeout(() => root.classList.remove('is-frosted', 'is-clearing'), 2600);
+}
+setTimeout(startClearing, document.querySelector('[data-stage]') && root.classList.contains('has-ice') ? 3200 : 350);
 
 initAmbient({ reduced });
 initReveal();

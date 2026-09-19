@@ -183,8 +183,9 @@ table.plain th, table.plain td { border-top: 1px solid var(--frost); padding: 1.
 table.plain tr:last-child th, table.plain tr:last-child td { border-bottom: 1px solid var(--frost); }
 table.plain th { font-family: var(--mincho); font-weight: 700; width: 7.5em; white-space: nowrap; padding-right: 1.5rem; }
 
-.js .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
-.js .reveal.is-in { opacity: 1; transform: none; }
+/* 紙面の要素：曇りが晴れるように、ぼけた状態から澄む */
+.js .reveal { opacity: 0; transform: translateY(18px); filter: blur(12px); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease), filter 1.3s var(--ease); }
+.js .reveal.is-in { opacity: 1; transform: none; filter: none; }
 
 /* ---------- 冒頭 ---------- */
 .hero__lead {
@@ -497,12 +498,25 @@ html:not(.has-ice) .stage--night .stage__still { position: absolute; right: 8%; 
   .foot__copy { grid-column: 1 / 13; }
 }
 
-/* ---------- ページの切り替え ---------- */
+/* ---------- 動きの言葉：すべては「曇りが晴れて」現れる ---------- */
+/* 開いた瞬間：曇りガラスごしに始まり、中央から澄んでいく（この訪問で最初の1ページだけ） */
+@property --clear { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+.is-frosted body::after {
+  content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none;
+  background: rgb(233 239 241 / 0.78); -webkit-backdrop-filter: blur(26px) saturate(0.7); backdrop-filter: blur(26px) saturate(0.7);
+  -webkit-mask-image: radial-gradient(ellipse 120% 120% at 58% 50%, transparent calc(var(--clear) - 22%), #000 var(--clear));
+  mask-image: radial-gradient(ellipse 120% 120% at 58% 50%, transparent calc(var(--clear) - 22%), #000 var(--clear));
+}
+.is-frosted body.is-night::after { background: rgb(12 26 34 / 0.72); }
+.is-frosted.is-clearing body::after { animation: clear 2.4s cubic-bezier(0.3, 0.1, 0.2, 1) both; }
+@keyframes clear { to { --clear: 165%; } }
+
+/* ページの切り替え：前のページは曇って消え、次のページは澄んで現れる */
 @view-transition { navigation: auto; }
-::view-transition-old(root) { animation: 0.35s var(--ease) both vt-out; }
-::view-transition-new(root) { animation: 0.6s var(--ease) both vt-in; }
-@keyframes vt-out { to { opacity: 0; } }
-@keyframes vt-in { from { opacity: 0; } }
+::view-transition-old(root) { animation: 0.4s var(--ease) both vt-out; }
+::view-transition-new(root) { animation: 0.9s var(--ease) both vt-in; }
+@keyframes vt-out { to { opacity: 0; filter: blur(14px); } }
+@keyframes vt-in { from { opacity: 0; filter: blur(18px); } }
 
 /* ---------- 全体が夜のページ ---------- */
 body.is-night { background: var(--ink); }
@@ -652,8 +666,8 @@ html:not(.has-ice) .ayumi__table { max-width: 44rem; }
   .stage--chapter .stage__grab { left: 15%; top: 24%; width: 70%; height: 34%; }
 }
 /* 章の文章は、その章の氷に変わってから現れる */
-.has-ice .stage .stage__pin > :not(.stage__grab) { opacity: 0; transition: opacity 0.5s var(--ease); }
-.has-ice .stage.is-active .stage__pin > :not(.stage__grab) { opacity: 1; transition: opacity 0.9s var(--ease) 0.35s; }
+.has-ice .stage .stage__pin > :not(.stage__grab) { opacity: 0; filter: blur(10px); transition: opacity 0.5s var(--ease), filter 0.5s var(--ease); }
+.has-ice .stage.is-active .stage__pin > :not(.stage__grab) { opacity: 1; filter: none; transition: opacity 0.9s var(--ease) 0.35s, filter 1.1s var(--ease) 0.35s; }
 html:not(.has-ice) .stage--chapter .stage__pin { display: grid; gap: 2.5rem; padding: 7rem var(--side) 5rem; min-height: 0; align-items: center; }
 html:not(.has-ice) .chapter__text { position: static; width: auto; max-width: 32em; }
 html:not(.has-ice) .stage--chapter .stage__still { width: min(100%, 26rem); }
@@ -837,5 +851,5 @@ table.grid--night small { color: var(--amber); }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-  .js .reveal { opacity: 1; transform: none; }
+  .js .reveal { opacity: 1; transform: none; filter: none; }
 }

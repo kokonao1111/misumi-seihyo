@@ -41,10 +41,12 @@ const COMMON = /* glsl */ `
   uniform vec3 uBgEdge;
   uniform vec3 uInk;
   uniform vec2 uRes;
+  uniform vec2 uDrift;       // 壁の字のずれ（ポインタと反対へ、ごくわずかに）。奥にあるものほど遅れて動く
 
   vec3 backdrop(vec2 uv) {
     vec2 c = clamp(uv, 0.0, 1.0);
-    float m = mix(texture2D(uText, c).r, texture2D(uTextB, c).r, uTextMix);
+    vec2 t = clamp(uv + uDrift, 0.0, 1.0);
+    float m = mix(texture2D(uText, t).r, texture2D(uTextB, t).r, uTextMix);
     float v = smoothstep(0.25, 1.05, distance(c, vec2(0.5, 0.52)));
     return mix(mix(uBg, uBgEdge, v), uInk, m);
   }

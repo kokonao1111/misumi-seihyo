@@ -20,6 +20,11 @@
     // 3Dが使えるかを先に判定して、代替表示が一瞬見えてしまうのを防ぐ
     (function () {
       var r = document.documentElement; r.classList.add('js');
+      // この訪問で最初に開いたページだけ、曇りガラスごしに始まって澄んでいく
+      try {
+        if (!sessionStorage.getItem('misumi-seen') && !matchMedia('(prefers-reduced-motion: reduce)').matches) r.classList.add('is-frosted');
+        sessionStorage.setItem('misumi-seen', '1');
+      } catch (e) {}
       try {
         if (/[?&]noice\b/.test(location.search)) return;
         var c = document.createElement('canvas');
