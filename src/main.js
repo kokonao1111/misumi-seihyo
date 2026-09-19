@@ -577,30 +577,59 @@ function initForm() {
 /* ---------- フッターの溶け時計 ---------- */
 function initMelt() {
   const timeEl = document.getElementById('meltTime');
-  const pctEl = document.getElementById('meltPct');
+  const iceEl = document.getElementById('meltIce');
   const homeEl = document.getElementById('meltHome');
-  if (!timeEl) return;
+  const againEl = document.getElementById('meltAgain');
+  if (!timeEl || !iceEl) return;
+  const KEY = 'misumi-opened';
+  // ページを移っても続きから数える。保存できない環境では、このページを開いた時刻から数える
   let t0 = Date.now();
   try {
-    const saved = Number(sessionStorage.getItem('misumi-opened'));
-    if (saved > 0) t0 = saved; else sessionStorage.setItem('misumi-opened', String(t0));
-  } catch { /* 保存できない環境では、このページを開いた時刻から数える */ }
+    const saved = Number(sessionStorage.getItem(KEY));
+    if (saved > 0) t0 = saved; else sessionStorage.setItem(KEY, String(t0));
+  } catch { /* そのまま */ }
+
   const MELT_MIN = 95; // 室温のグラスで丸氷（直径6.5cm）が溶けきるまでのおよその分数
+  // 家庭の氷は、比較表のとおり約35分で溶けきる
   const HOME = [
     [60, '家庭の氷なら、そろそろ角が取れはじめる頃です。'],
-    [240, '家庭の氷なら、グラスの底に水がたまってくる頃です。'],
-    [600, '家庭の氷なら、もうひと回り小さくなっています。'],
+    [300, '家庭の氷なら、グラスの底に水がたまってくる頃です。'],
+    [900, '家庭の氷なら、もうひと回り小さくなっています。'],
     [1500, '家庭の氷なら、半分ほどになっています。'],
-    [Infinity, '家庭の氷なら、もう残っていません。'],
+    [2100, '家庭の氷なら、もう小さなかけらです。'],
+    [MELT_MIN * 60, '家庭の氷なら、もう残っていません。'],
+    [Infinity, '家庭の氷なら、その間に2回は入れ替えています。'],
   ];
+
+  // 文は、溶け具合に合わせて変える。「まだ◯%しか」と言えるのは、半分を過ぎるあたりまで
+  const sentence = (pct) => {
+    const n = `${pct.toFixed(1)}%`;
+    if (pct < 60) return ['グラスに入れた三澄の丸氷は、まだ ', n, ' しか溶けていません。'];
+    if (pct < 100) return ['グラスに入れた三澄の丸氷は、', n, ' まで溶けました。まだ、残っています。'];
+    return ['グラスに入れた三澄の丸氷は、', `${MELT_MIN}分`, ' かけて溶けきりました。'];
+  };
+  let lastText = '';
   const tick = () => {
-    const s = Math.floor((Date.now() - t0) / 1000);
+    const s = Math.max(0, Math.floor((Date.now() - t0) / 1000));
     const m = Math.floor(s / 60);
     const h = Math.floor(m / 60);
     timeEl.textContent = h ? `${h}時間${m % 60}分` : m ? `${m}分${s % 60}秒` : `${s}秒`;
-    pctEl.textContent = `${Math.min(100, (s / (MELT_MIN * 60)) * 100).toFixed(1)}%`;
+    const pct = Math.min(100, (s / (MELT_MIN * 60)) * 100);
+    const parts = sentence(pct);
+    if (parts.join('') !== lastText) {
+      lastText = parts.join('');
+      const b = document.createElement('b');
+      b.textContent = parts[1];
+      iceEl.replaceChildren(parts[0], b, parts[2]);
+    }
     homeEl.textContent = HOME.find(([limit]) => s < limit)[1];
+    if (againEl) againEl.hidden = pct < 100;
   };
+  againEl?.addEventListener('click', () => {
+    t0 = Date.now();
+    try { sessionStorage.setItem(KEY, String(t0)); } catch { /* そのまま */ }
+    tick();
+  });
   tick();
   setInterval(tick, 1000);
 }
