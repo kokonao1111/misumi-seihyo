@@ -120,11 +120,6 @@ html:not(.has-ice) .stage--night { background: var(--ink); }
 .head__nav a:hover::after, .head__nav a[aria-current]::after { transform: scaleX(1); transform-origin: left; }
 .head__nav .head__tel { border: 1px solid currentColor; padding: 0.35rem 1.1rem; }
 .head__nav .head__tel::after { display: none; }
-/* 音の入り切り。氷の音は既定で鳴らさない */
-.head__sound { font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 0.5rem; opacity: 0.75; transition: opacity 0.4s; }
-.head__sound::before { content: ""; width: 0.5rem; height: 0.5rem; border: 1px solid currentColor; border-radius: 50%; transition: background 0.4s; }
-.head__sound[aria-pressed="true"]::before { background: currentColor; }
-.head__sound:hover, .head__sound[aria-pressed="true"] { opacity: 1; }
 .head__menu { display: none; }
 
 @media (max-width: 899px) {
@@ -152,7 +147,6 @@ html:not(.has-ice) .stage--night { background: var(--ink); }
   .head__nav.is-open { clip-path: inset(0); visibility: visible; transition: clip-path 0.7s var(--ease), visibility 0s; }
   .head__nav a { padding: 0.35rem 0; }
   .head__nav .head__tel { margin-top: 1.5rem; font-family: var(--gothic); font-size: 1rem; padding: 0.6rem 1.5rem; }
-  .head__sound { margin-top: 1.75rem; font-family: var(--gothic); font-size: 0.9375rem; }
 }
 
 /* ---------- 共通の部品 ---------- */

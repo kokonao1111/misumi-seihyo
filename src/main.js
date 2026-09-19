@@ -1,6 +1,10 @@
 import Lenis from 'lenis';
 import { initAmbient } from './ambient.js';
-import { sound } from './sound.js';
+// 音は、いったん止めている（音があると安っぽく見える、という判断。2026-09-19）。
+// 部品（src/sound.js）と、鳴らす箇所の呼び出しは残してある。戻すときは、下の1行を
+//   import { sound } from './sound.js';
+// に差し替え、src/partials/header.html に「音を出す」のボタン（id="sound"）を戻す。
+const sound = new Proxy({}, { get: () => () => false });
 
 const root = document.documentElement;
 
@@ -493,6 +497,15 @@ function initHead() {
     const dark = !!under?.closest('.night, .onward--night, .foot');
     head.classList.toggle('is-solid', !onStage);
     head.classList.toggle('is-dark', !onStage && dark);
+    // 右下の「音を出す」も、うしろが夜なら夜の色にする
+    const chip = document.getElementById('sound');
+    if (chip) {
+      chip.style.visibility = 'hidden';
+      const r = chip.getBoundingClientRect();
+      const back = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      chip.style.visibility = '';
+      chip.classList.toggle('is-dark', !!back?.closest('.night, .onward--night, .foot, .stage--night, .head__nav'));
+    }
   };
   addEventListener('scroll', () => {
     const y = scrollY;
@@ -523,6 +536,8 @@ function initSound() {
     addEventListener('keydown', arm);
   }
   show();
+  // 初めて来た人には、最初の数秒だけ印を脈打たせて知らせる
+  if (!sound.wanted()) { btn.classList.add('is-new'); setTimeout(() => btn.classList.remove('is-new'), 9000); }
 }
 
 /* ---------- メニュー ---------- */
@@ -696,7 +711,6 @@ initReveal();
 initTables();
 initHead();
 initSound();
-window.__sound = sound;   // 点検用
 initMenu();
 initNowRun();
 initForm();
